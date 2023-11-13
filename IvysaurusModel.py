@@ -2,7 +2,7 @@ from tensorflow import keras
 from tensorflow.keras import layers
 
 # start/endGrid.shape = (n, dimensions, dimensions, 1)
-def IvysaurusIChooseYou(dimensions, nclasses, meanStartU, varStartU, meanStartV, varStartV, meanStartW, varStartW, meanEndU, varEndU, meanEndV, varEndV, meanEndW, varEndW):
+def IvysaurusIChooseYou(dimensions, nclasses, nTrackVars, meanStartU, varStartU, meanStartV, varStartV, meanStartW, varStartW, meanEndU, varEndU, meanEndV, varEndV, meanEndW, varEndW):
     
     ################################
     # U View
@@ -31,16 +31,29 @@ def IvysaurusIChooseYou(dimensions, nclasses, meanStartU, varStartU, meanStartV,
     endInputsW = keras.Input(shape=(dimensions, dimensions, 1))
     branchW = CreateViewBranch(dimensions, startInputsW, endInputsW)
     
+    ################################
     # Now combine the U, V and W branches
+    ################################
     combined = keras.layers.Concatenate()([branchU, branchV, branchW])
     
+    ################################
     # FC layer??
+    ################################
     combined = keras.layers.Dense(128, activation="relu")(combined)
     
+    ################################
+    # Now add in the trackVars
+    ################################
+    trackVarsInputs = keras.Input(shape=(nTrackVars,))
+    combined = keras.layers.Concatenate()([combined, trackVarsInputs])
+    combined = keras.layers.Dense(128, activation="relu")(combined)
+
+    ################################
     # Now classify the image
+    ################################
     outputs = keras.layers.Dense(nclasses, activation="softmax")(combined)
     
-    model = keras.Model(inputs=[startInputsU, endInputsU, startInputsV, endInputsV, startInputsW, endInputsW], outputs=outputs)
+    model = keras.Model(inputs=[startInputsU, endInputsU, startInputsV, endInputsV, startInputsW, endInputsW, trackVarsInputs], outputs=outputs)
     
     return model
 
@@ -90,5 +103,6 @@ def CreateViewBranch(dimensions, startInputs, endInputs):
     # Now combine the start/end branches
     ################################
     combined = keras.layers.Concatenate()([startBranch, endBranch])
+    combined = keras.layers.Dense(128, activation="relu")(combined)
     
     return combined

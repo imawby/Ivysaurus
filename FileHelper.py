@@ -111,11 +111,12 @@ def readTreeOLD(branches, dimensions, nClasses, nEntries):
 
     return startGridU, startGridV, startGridW, endGridU, endGridV, endGridW, y
 
-############################################################################
+#################################################################################################################
+#################################################################################################################
 
 def readTree(fileNames, dimensions, nClasses) :
 
-    # Lists
+    # Grid lists
     startGridU = []
     startGridV = []
     startGridW = []
@@ -124,6 +125,16 @@ def readTree(fileNames, dimensions, nClasses) :
     endGridV = []
     endGridW = []
     particlePDG = []
+    
+    # TrackVar lists
+    trackVarsSuccessful = []
+    nTrackChildren = []
+    nShowerChildren = []
+    nGrandChildren = []
+    trackLength = []
+    trackWobble = []
+    trackScore = []
+
     
     nEntries = 0
     
@@ -139,10 +150,17 @@ def readTree(fileNames, dimensions, nClasses) :
         startGridU.extend(branches['StartGridU'])
         startGridV.extend(branches['StartGridV'])
         startGridW.extend(branches['StartGridW'])
-        
         endGridU.extend(branches['EndGridU'])
         endGridV.extend(branches['EndGridV'])
         endGridW.extend(branches['EndGridW'])
+        
+        trackVarsSuccessful.extend(branches['TrackVarsSuccessful'])
+        nTrackChildren.extend(branches['NTrackChildren'])
+        nShowerChildren.extend(branches['NShowerChildren'])
+        nGrandChildren.extend(branches['NGrandChildren'])
+        trackLength.extend(branches['TrackLength'])
+        trackWobble.extend(branches['TrackWobble'])
+        trackScore.extend(branches['TrackScore'])
         
         particlePDG.extend(branches['TruePDG'])
         
@@ -151,28 +169,68 @@ def readTree(fileNames, dimensions, nClasses) :
     startGridU = np.array(startGridU)
     startGridV = np.array(startGridV)    
     startGridW = np.array(startGridW)    
-    
     endGridU = np.array(endGridU)
     endGridV = np.array(endGridV)
     endGridW = np.array(endGridW)
     
+    trackVarsSuccessful = np.array(trackVarsSuccessful)
+    nTrackChildren = np.array(nTrackChildren)
+    nShowerChildren = np.array(nShowerChildren)
+    nGrandChildren = np.array(nGrandChildren)
+    trackLength = np.array(trackLength)
+    trackWobble = np.array(trackWobble)
+    trackScore = np.array(trackScore)
     particlePDG = np.array(particlePDG)
+
     
+    # Reshape
     startGridU.reshape(nEntries, dimensions, dimensions, 1)
     startGridV.reshape(nEntries, dimensions, dimensions, 1)
     startGridW.reshape(nEntries, dimensions, dimensions, 1)
     endGridU.reshape(nEntries, dimensions, dimensions, 1)
     endGridV.reshape(nEntries, dimensions, dimensions, 1)
     endGridW.reshape(nEntries, dimensions, dimensions, 1)
+    nTrackChildren.reshape(nEntries, 1)
+    nShowerChildren.reshape(nEntries, 1)
+    nGrandChildren.reshape(nEntries, 1)
+    trackLength.reshape(nEntries, 1)
+    trackWobble.reshape(nEntries, 1)
+    trackScore.reshape(nEntries, 1)
     particlePDG.reshape(nEntries, 1)
     
+    # Normalise track vars
+    
+    nTrackChildrenLimit = 5.0
+    nShowerChildrenLimit = 3.0
+    nGrandChildrenLimit = 3.0
+    trackLengthLimit = 500.0
+    wobbleLimit = 15.0
+
+    nTrackChildren[nTrackChildren > nTrackChildrenLimit] = nTrackChildrenLimit
+    nTrackChildren = nTrackChildren / nTrackChildrenLimit
+    
+    nShowerChildren[nShowerChildren > nShowerChildrenLimit] = nShowerChildrenLimit
+    nShowerChildren = nShowerChildren / nShowerChildrenLimit
+    
+    nGrandChildren[nGrandChildren > nGrandChildrenLimit] = nGrandChildrenLimit
+    nGrandChildren = nGrandChildren / nGrandChildrenLimit
+    
+    trackLength[trackLength > trackLengthLimit] = trackLengthLimit
+    trackLength = trackLength / trackLengthLimit
+    
+    trackWobble[trackWobble > wobbleLimit] = wobbleLimit
+    trackWobble = trackWobble / wobbleLimit  
+    
+    trackVars = np.concatenate((nTrackChildren, nShowerChildren, nGrandChildren, trackLength, trackWobble, trackScore), axis=1)
+    
+    # Refinement of the particlePDG vector
     print('We have ', str(nEntries), ' PFParticles overall!')
     print('nMuons: ', np.count_nonzero(abs(particlePDG) == 13))
     print('nProtons: ', np.count_nonzero(abs(particlePDG) == 2212))    
     print('nPions: ', np.count_nonzero(abs(particlePDG) == 211))     
     print('nElectrons: ', np.count_nonzero(abs(particlePDG) == 11))     
     print('nPhotons: ', np.count_nonzero(abs(particlePDG) == 22))     
-    print('nOther: ', np.count_nonzero((abs(particlePDG) != 13) & (abs(particlePDG) != 2212) & (abs(particlePDG) != 221) & (abs(particlePDG) != 11) &  (abs(particlePDG) != 22)))
+    print('nOther: ', np.count_nonzero((abs(particlePDG) != 13) & (abs(particlePDG) != 2212) & (abs(particlePDG) != 211) & (abs(particlePDG) != 11) &  (abs(particlePDG) != 22)))
    
     # muons = 0, protons = 1, pions = 2, electrons = 3, photons = 4, other = 5
     particlePDG[abs(particlePDG) == 13] = 0
@@ -181,10 +239,75 @@ def readTree(fileNames, dimensions, nClasses) :
     particlePDG[abs(particlePDG) == 11] = 3
     particlePDG[abs(particlePDG) == 22] = 4
     particlePDG[(abs(particlePDG) != 0) & (abs(particlePDG) != 1) & (abs(particlePDG) != 2) & (abs(particlePDG) != 3) &  (abs(particlePDG) != 4)] = 5
+    
+    # We don't have enough 'other' events to train them...
+    #mask = particlePDG < nClasses
+    #startGridU = startGridU[mask]
+    #startGridV = startGridV[mask]    
+    #startGridW = startGridW[mask]
+    
+    #endGridU = endGridU[mask]
+    #endGridV = endGridV[mask]
+    #endGridW = endGridW[mask]
+    
+    #particlePDG = particlePDG[mask] 
 
     y = to_categorical(particlePDG, nClasses)
+    
+    return startGridU, startGridV, startGridW, endGridU, endGridV, endGridW, trackVars, y
 
-    return startGridU, startGridV, startGridW, endGridU, endGridV, endGridW, y
+#################################################################################################################
+#################################################################################################################
 
+def readTrackVars(fileNames) :
+    
+    # TrackVar lists
+    trackVarsSuccessful = []
+    nTrackChildren = []
+    nShowerChildren = []
+    nGrandChildren = []
+    trackLength = []
+    trackWobble = []
+    trackScore = []
+    particlePDG = []
+    
+    nEntries = 0
+    
+    for fileName in fileNames :
+        print('Reading tree: ', str(fileName),', This may take a while...')
+    
+        treeFile = uproot.open(fileName)
+        tree = treeFile['ivyTrain/ivysaur']
+        branches = tree.arrays()
+        
+        nEntries += len(branches)
+    
+        trackVarsSuccessful.extend(branches['TrackVarsSuccessful'])
+        nTrackChildren.extend(branches['NTrackChildren'])
+        nShowerChildren.extend(branches['NShowerChildren'])
+        nGrandChildren.extend(branches['NGrandChildren'])
+        trackLength.extend(branches['TrackLength'])
+        trackWobble.extend(branches['TrackWobble'])
+        trackScore.extend(branches['TrackScore'])
+     
+        particlePDG.extend(branches['TruePDG'])
+
+    trackVarsSuccessful = np.array(trackVarsSuccessful)
+    nTrackChildren = np.array(nTrackChildren)
+    nShowerChildren = np.array(nShowerChildren)
+    nGrandChildren = np.array(nGrandChildren)
+    trackLength = np.array(trackLength)
+    trackWobble = np.array(trackWobble)
+    trackScore = np.array(trackScore)
+    particlePDG = np.array(particlePDG)
+    
+    particlePDG[abs(particlePDG) == 13] = 0
+    particlePDG[abs(particlePDG) == 2212] = 1
+    particlePDG[abs(particlePDG) == 211] = 2
+    particlePDG[abs(particlePDG) == 11] = 3
+    particlePDG[abs(particlePDG) == 22] = 4
+    particlePDG[(abs(particlePDG) != 0) & (abs(particlePDG) != 1) & (abs(particlePDG) != 2) & (abs(particlePDG) != 3) &  (abs(particlePDG) != 4)] = 5
+    
+    return trackVarsSuccessful, nTrackChildren, nShowerChildren, nGrandChildren, trackLength, trackWobble, trackScore, particlePDG
 
 

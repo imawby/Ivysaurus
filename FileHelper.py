@@ -126,6 +126,8 @@ def readTree(fileNames, dimensions, nClasses) :
     endGridW = []
     particlePDG = []
     
+    eventID = []
+    
     # TrackVar lists
     trackVarsSuccessful = []
     nTrackChildren = []
@@ -254,7 +256,7 @@ def readTree(fileNames, dimensions, nClasses) :
 
     y = to_categorical(particlePDG, nClasses)
     
-    return startGridU, startGridV, startGridW, endGridU, endGridV, endGridW, trackVars, y
+    return eventID, startGridU, startGridV, startGridW, endGridU, endGridV, endGridW, trackVars, y
 
 #################################################################################################################
 #################################################################################################################
@@ -266,9 +268,14 @@ def readTrackVars(fileNames) :
     nTrackChildren = []
     nShowerChildren = []
     nGrandChildren = []
+    nChildHits = []
+    childEnergy = []
+    childTrackScore = []
     trackLength = []
     trackWobble = []
     trackScore = []
+    momComparison = []
+    
     particlePDG = []
     
     nEntries = 0
@@ -286,6 +293,9 @@ def readTrackVars(fileNames) :
         nTrackChildren.extend(branches['NTrackChildren'])
         nShowerChildren.extend(branches['NShowerChildren'])
         nGrandChildren.extend(branches['NGrandChildren'])
+        nChildHits.extend(branches['NChildHits'])
+        childEnergy.extend(branches['ChildEnergy'])
+        childTrackScore.extend(branches['ChildTrackScore'])
         trackLength.extend(branches['TrackLength'])
         trackWobble.extend(branches['TrackWobble'])
         trackScore.extend(branches['TrackScore'])
@@ -309,5 +319,18 @@ def readTrackVars(fileNames) :
     particlePDG[(abs(particlePDG) != 0) & (abs(particlePDG) != 1) & (abs(particlePDG) != 2) & (abs(particlePDG) != 3) &  (abs(particlePDG) != 4)] = 5
     
     return trackVarsSuccessful, nTrackChildren, nShowerChildren, nGrandChildren, trackLength, trackWobble, trackScore, particlePDG
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
 

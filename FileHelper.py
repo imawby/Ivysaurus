@@ -116,31 +116,31 @@ def readTree(fileNames, dimensions, nClasses) :
     ###################################
     # Reshape
     ###################################
-    startGridU.reshape(nEntries, dimensions, dimensions, 1)
-    startGridV.reshape(nEntries, dimensions, dimensions, 1)
-    startGridW.reshape(nEntries, dimensions, dimensions, 1)
-    endGridU.reshape(nEntries, dimensions, dimensions, 1)
-    endGridV.reshape(nEntries, dimensions, dimensions, 1)
-    endGridW.reshape(nEntries, dimensions, dimensions, 1)
+    startGridU = startGridU.reshape((nEntries, dimensions, dimensions, 1))
+    startGridV = startGridV.reshape((nEntries, dimensions, dimensions, 1))
+    startGridW = startGridW.reshape((nEntries, dimensions, dimensions, 1))
+    endGridU = endGridU.reshape((nEntries, dimensions, dimensions, 1))
+    endGridV = endGridV.reshape((nEntries, dimensions, dimensions, 1))
+    endGridW = endGridW.reshape((nEntries, dimensions, dimensions, 1))
     
-    nTrackChildren.reshape(nEntries, 1)
-    nShowerChildren.reshape(nEntries, 1)
-    nGrandChildren.reshape(nEntries, 1)
-    nChildHits.reshape(nEntries, 1)
-    childEnergy.reshape(nEntries, 1)
-    childTrackScore.reshape(nEntries, 1)
-    trackLength.reshape(nEntries, 1)
-    trackWobble.reshape(nEntries, 1)
-    trackScore.reshape(nEntries, 1)
-    momComparison.reshape(nEntries, 1)
+    nTrackChildren = nTrackChildren.reshape((nEntries, 1))
+    nShowerChildren = nShowerChildren.reshape((nEntries, 1))
+    nGrandChildren = nGrandChildren.reshape((nEntries, 1))
+    nChildHits = nChildHits.reshape((nEntries, 1))
+    childEnergy = childEnergy.reshape((nEntries, 1))
+    childTrackScore = childTrackScore.reshape((nEntries, 1))
+    trackLength = trackLength.reshape((nEntries, 1))
+    trackWobble = trackWobble.reshape((nEntries, 1))
+    trackScore = trackScore.reshape((nEntries, 1))
+    momComparison = momComparison.reshape((nEntries, 1))
     
-    displacement.reshape(nEntries, 1)
-    dca.reshape(nEntries, 1)
-    trackStubLength.reshape(nEntries, 1)
-    nuVertexAvSeparation.reshape(nEntries, 1)
-    nuVertexChargeAsymmetry.reshape(nEntries, 1)
+    displacement = displacement.reshape((nEntries, 1))
+    dca = dca.reshape((nEntries, 1))
+    trackStubLength = trackStubLength.reshape((nEntries, 1))
+    nuVertexAvSeparation = nuVertexAvSeparation.reshape((nEntries, 1))
+    nuVertexChargeAsymmetry = nuVertexChargeAsymmetry.reshape((nEntries, 1))
     
-    particlePDG.reshape(nEntries, 1)
+    particlePDG = particlePDG.reshape((nEntries, 1))
     
     ###################################
     # Normalise the start and end grids
@@ -164,6 +164,7 @@ def readTree(fileNames, dimensions, nClasses) :
     
     endGridW[endGridW > energyLimit] = energyLimit
     endGridW = endGridW / energyLimit
+
     
     ###################################
     # Normalise track vars
@@ -260,6 +261,9 @@ def readTree(fileNames, dimensions, nClasses) :
     #particlePDG[(abs(particlePDG) != 0) & (abs(particlePDG) != 1) & (abs(particlePDG) != 2) & (abs(particlePDG) != 3) &  (abs(particlePDG) != 4)] = 5
     
     y = to_categorical(particlePDG, nClasses)
+    
+    print('startGridU: ', startGridU.shape)
+    print('startGridV: ', startGridV.shape)
     
     return nEntries, startGridU, startGridV, startGridW, endGridU, endGridV, endGridW, trackVars, showerVars, y
 

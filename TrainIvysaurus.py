@@ -2,44 +2,79 @@ print('111')
 
 import numpy as np
 import math
+import glob
+import sys
 
 print('222')
 
 import tensorflow
-from tensorflow.keras import layers
-from tensorflow.keras.utils import to_categorical
-from tensorflow.keras import optimizers
+from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.callbacks import ReduceLROnPlateau
 
 print('333')
 
-import sklearn 
-from sklearn.metrics import confusion_matrix
-from sklearn.metrics import ConfusionMatrixDisplay
-from sklearn.metrics import roc_curve
-from sklearn.metrics import auc
 from sklearn.utils import class_weight
 
 print('444')
 
 import IvysaurusModel
 import IvysaurusModel_VGG
-import IvysaurusModel_Inception
+import IvysaurusModel_VGG_BN
+import IvysaurusModel_VGG_SEP
+import IvysaurusModel_VGG_EX
+import IvysaurusModel_VGG_RES
 
 print('555')
 
 ###########################################################
+###########################################################
+
+def WhoseThatPokemon(ndimensions, nclasses, ntrackvars, nshowervars, mode) :
+    
+   if (mode == '0') :
+      print('IvysaurusModel_VGG')
+      return IvysaurusModel_VGG.IvysaurusIChooseYou(ndimensions, nclasses, ntrackvars, nshowervars)
+   elif (mode == '1') :
+      print('IvysaurusModel_VGG_BN')
+      return IvysaurusModel_VGG_BN.IvysaurusIChooseYou(ndimensions, nclasses, ntrackvars, nshowervars)
+   elif (mode == '2') :
+      print('IvysaurusModel_VGG_SEP')
+      return IvysaurusModel_VGG_SEP.IvysaurusIChooseYou(ndimensions, nclasses, ntrackvars, nshowervars)
+   elif (mode == '3') :
+      print('IvysaurusModel_VGG_EX')
+      return IvysaurusModel_VGG_EX.IvysaurusIChooseYou(ndimensions, nclasses, ntrackvars, nshowervars)
+   elif (mode == '4') :
+      print('IvysaurusModel_VGG_RES')
+      return IvysaurusModel_VGG_RES.IvysaurusIChooseYou(ndimensions, nclasses, ntrackvars, nshowervars)
+
+   return IvysaurusModel_VGG.IvysaurusIChooseYou(ndimensions, nclasses, ntrackvars, nshowervars)
+      
+
+###########################################################
+###########################################################
 
 print('AAAAAAA')
 
+physical_devices = tensorflow.config.experimental.list_physical_devices('GPU')
+
+if len(physical_devices) > 0 :
+    for gpu in physical_devices :
+       tensorflow.config.experimental.set_memory_growth(gpu, True)
+
+print('1111111')
+
+###########################################################
+
+# VGG, VGG_BN, VGG_SEP, VGG_EX, VGG_RES
+MODE_VGG = sys.argv[1]
+
+print('MODE_VGG: ', MODE_VGG)
+
 dimensions = 24
-nClasses = 6
+nClasses = 5
 
 nTrackVars = 10 # nTrackChildren, nShowerChildren, nGrandChildren, nChildHits, childEnergy, childTrackScore, trackLength, trackWobble, trackScore, momComparison
 nShowerVars = 3 # displacement, dca, trackStubLength
-
-ntrain = 928250
-ntest  = 103139
 
 nEpochs = 10
 batchSize = 64
@@ -51,33 +86,64 @@ learningRate = 1e-4
 
 print('BBBBBBB')
 
-trainVarFile = '/storage/users/mawbyi1/Ivysaurus/files/grid24/trainVarArrays.npz'
-data = np.load(trainVarFile)
-    
-startGridU_train = data['startGridU_train']
-startGridV_train = data['startGridV_train']
-startGridW_train = data['startGridW_train']
-    
-startGridU_test = data['startGridU_test']
-startGridV_test = data['startGridV_test'] 
-startGridW_test = data['startGridW_test']
-    
-endGridU_train = data['endGridU_train']
-endGridV_train = data['endGridV_train']
-endGridW_train = data['endGridW_train']
-    
-endGridU_test = data['endGridU_test']
-endGridV_test = data['endGridV_test']
-endGridW_test = data['endGridW_test']
-    
-trackVars_train = data['trackVars_train']
-trackVars_test = data['trackVars_test']
+startGridU_train = np.empty((0, dimensions, dimensions, 1))
+startGridV_train = np.empty((0, dimensions, dimensions, 1))
+startGridW_train = np.empty((0, dimensions, dimensions, 1))
 
-showerVars_train = data['showerVars_train']
-showerVars_test = data['showerVars_test']
+endGridU_train = np.empty((0, dimensions, dimensions, 1))
+endGridV_train = np.empty((0, dimensions, dimensions, 1))
+endGridW_train = np.empty((0, dimensions, dimensions, 1))
+
+trackVars_train = np.empty((0, nTrackVars))
+showerVars_train = np.empty((0, nShowerVars))
+
+y_train = np.empty((0, nClasses))
+
+startGridU_test = np.empty((0, dimensions, dimensions, 1))
+startGridV_test = np.empty((0, dimensions, dimensions, 1))
+startGridW_test = np.empty((0, dimensions, dimensions, 1))
+
+endGridU_test = np.empty((0, dimensions, dimensions, 1))
+endGridV_test = np.empty((0, dimensions, dimensions, 1))
+endGridW_test = np.empty((0, dimensions, dimensions, 1))
+
+trackVars_test = np.empty((0, nTrackVars))
+showerVars_test = np.empty((0, nShowerVars))
+
+y_test = np.empty((0, nClasses))
+
+trainFileNames = glob.glob('/storage/users/mawbyi1/Ivysaurus/files/grid24/*/ivysaurus_*.npz')
+print(trainFileNames)
+
+for trainFileName in trainFileNames :
+    print('Reading file: ', str(trainFileName),', This may take a while...')
     
-y_train = data['y_train']
-y_test = data['y_test']
+    data = np.load(trainFileName)
+
+    startGridU_train = np.concatenate((startGridU_train, data['startGridU_test']), axis=0)
+    startGridV_train = np.concatenate((startGridV_train, data['startGridV_test']), axis=0)
+    startGridW_train = np.concatenate((startGridW_train, data['startGridW_test']), axis=0)
+    
+    startGridU_test = np.concatenate((startGridU_test, data['startGridU_train']), axis=0)
+    startGridV_test = np.concatenate((startGridV_test, data['startGridV_train']), axis=0) 
+    startGridW_test = np.concatenate((startGridW_test, data['startGridW_train']), axis=0)
+    
+    endGridU_train = np.concatenate((endGridU_train, data['endGridU_test']), axis=0)
+    endGridV_train = np.concatenate((endGridV_train, data['endGridV_test']), axis=0)
+    endGridW_train = np.concatenate((endGridW_train, data['endGridW_test']), axis=0)
+    
+    endGridU_test = np.concatenate((endGridU_test, data['endGridU_train']), axis=0)
+    endGridV_test = np.concatenate((endGridV_test, data['endGridV_train']), axis=0)
+    endGridW_test = np.concatenate((endGridW_test, data['endGridW_train']), axis=0)
+    
+    trackVars_train = np.concatenate((trackVars_train, data['trackVars_test']), axis=0)
+    trackVars_test = np.concatenate((trackVars_test, data['trackVars_train']), axis=0)
+
+    showerVars_train = np.concatenate((showerVars_train, data['showerVars_test']), axis=0)
+    showerVars_test = np.concatenate((showerVars_test, data['showerVars_train']), axis=0)
+    
+    y_train = np.concatenate((y_train, data['y_test']), axis=0)
+    y_test = np.concatenate((y_test, data['y_train']), axis=0)
 
 print('CCCCCC')
 
@@ -170,56 +236,18 @@ endGridW_test[np.where(brokenWIndex_test)[:][:]] = 0
 '''
 ###########################################################
 
-# Normalise start/end grids
+mirrored_strategy = tensorflow.distribute.MultiWorkerMirroredStrategy()
 
-energyLimit = 0.01
+print('Number of devices: {}'.format(mirrored_strategy.num_replicas_in_sync))
 
-startGridU_train[startGridU_train > energyLimit] = energyLimit
-startGridU_train = startGridU_train / energyLimit
+with mirrored_strategy.scope():
+   # VGG, VGG_BN, VGG_SEP, VGG_EX, VGG_RES
+   ivysaurusCNN = WhoseThatPokemon(dimensions, nClasses, nTrackVars, nShowerVars, MODE_VGG)
+   ivysaurusCNN.summary()
 
-startGridV_train[startGridV_train > energyLimit] = energyLimit
-startGridV_train = startGridV_train / energyLimit
-
-startGridW_train[startGridW_train > energyLimit] = energyLimit
-startGridW_train = startGridW_train / energyLimit
-
-endGridU_train[endGridU_train > energyLimit] = energyLimit
-endGridU_train = endGridU_train / energyLimit
-
-endGridV_train[endGridV_train > energyLimit] = energyLimit
-endGridV_train = endGridV_train / energyLimit
-
-endGridW_train[endGridW_train > energyLimit] = energyLimit
-endGridW_train = endGridW_train / energyLimit
-
-startGridU_test[startGridU_test > energyLimit] = energyLimit
-startGridU_test = startGridU_test / energyLimit
-
-startGridV_test[startGridV_test > energyLimit] = energyLimit
-startGridV_test = startGridV_test / energyLimit
-
-startGridW_test[startGridW_test > energyLimit] = energyLimit
-startGridW_test = startGridW_test / energyLimit
-
-endGridU_test[endGridU_test > energyLimit] = energyLimit
-endGridU_test = endGridU_test / energyLimit
-
-endGridV_test[endGridV_test > energyLimit] = energyLimit
-endGridV_test = endGridV_test / energyLimit
-
-endGridW_test[endGridW_test > energyLimit] = energyLimit
-endGridW_test = endGridW_test / energyLimit
-
-###########################################################
-
-ivysaurusCNN = IvysaurusModel_VGG.IvysaurusIChooseYou(dimensions, nClasses, nTrackVars, nShowerVars)
-ivysaurusCNN.summary()
-
-###########################################################
-
-# Define the optimiser and compile the model
-optimiser = optimizers.Adam(learning_rate=learningRate)
-ivysaurusCNN.compile(loss='categorical_crossentropy', optimizer=optimiser, metrics=['accuracy'])
+   # Define the optimiser and compile the model
+   optimiser = Adam(learning_rate=learningRate)
+   ivysaurusCNN.compile(loss='categorical_crossentropy', optimizer=optimiser, metrics=['accuracy'])
 
 ###########################################################
 
@@ -258,18 +286,15 @@ history = ivysaurusCNN.fit([startGridU_train, endGridU_train, startGridV_train, 
 # Save the model
 
 print('Saving model...')
-'''
-model_json = ivysaurusCNN.to_json()
 
-with open("/home/hpc/30/mawbyi1/Ivysaurus/files/grid24/model.json", "w") as json_file:
-    json_file.write(model_json)
-
-# serialize weights to HDF5
-ivysaurusCNN.save_weights("/home/hpc/30/mawbyi1/Ivysaurus/files/grid24/model.h5")
-'''
-
-#ivysaurusCNN.save('/home/hpc/30/mawbyi1/Ivysaurus/files/grid24/my_model')
-
-ivysaurusCNN.save('/home/hpc/30/mawbyi1/Ivysaurus/files/grid24/my_model_ShowerVars_VGG')
-
+if (MODE_VGG == '0') :
+   ivysaurusCNN.save('/home/hpc/30/mawbyi1/Ivysaurus/files/grid24/my_model_VGG')
+elif (MODE_VGG == '1') :
+   ivysaurusCNN.save('/home/hpc/30/mawbyi1/Ivysaurus/files/grid24/my_model_VGG_BN')
+elif (MODE_VGG == '2') :
+   ivysaurusCNN.save('/home/hpc/30/mawbyi1/Ivysaurus/files/grid24/my_model_VGG_SEP')
+elif (MODE_VGG == '3') :
+   ivysaurusCNN.save('/home/hpc/30/mawbyi1/Ivysaurus/files/grid24/my_model_VGG_EX')
+elif (MODE_VGG == '4') :
+   ivysaurusCNN.save('/home/hpc/30/mawbyi1/Ivysaurus/files/grid24/my_model_VGG_RES')
 

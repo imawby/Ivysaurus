@@ -1,5 +1,5 @@
-from tensorflow import keras
-from tensorflow.keras import layers
+from tensorflow.keras import Model, Input
+from tensorflow.keras.layers import Concatenate, Dense, Dropout, Conv2D, MaxPooling2D, Flatten
 
 # start/endGrid.shape = (n, dimensions, dimensions, 1)
 def IvysaurusIChooseYou(dimensions, nclasses, nTrackVars, nShowerVars):
@@ -7,55 +7,55 @@ def IvysaurusIChooseYou(dimensions, nclasses, nTrackVars, nShowerVars):
     ################################
     # U View
     ################################
-    startInputsU = keras.Input(shape=(dimensions, dimensions, 1))
-    endInputsU = keras.Input(shape=(dimensions, dimensions, 1))
+    startInputsU = Input(shape=(dimensions, dimensions, 1))
+    endInputsU = Input(shape=(dimensions, dimensions, 1))
     branchU = CreateViewBranch(dimensions, startInputsU, endInputsU)
     
     ################################
     # V View
     ################################
-    startInputsV = keras.Input(shape=(dimensions, dimensions, 1))
-    endInputsV = keras.Input(shape=(dimensions, dimensions, 1))
+    startInputsV = Input(shape=(dimensions, dimensions, 1))
+    endInputsV = Input(shape=(dimensions, dimensions, 1))
     branchV = CreateViewBranch(dimensions, startInputsV, endInputsV)    
     
     ################################
     # W View
     ################################
-    startInputsW = keras.Input(shape=(dimensions, dimensions, 1))
-    endInputsW = keras.Input(shape=(dimensions, dimensions, 1))
+    startInputsW = Input(shape=(dimensions, dimensions, 1))
+    endInputsW = Input(shape=(dimensions, dimensions, 1))
     branchW = CreateViewBranch(dimensions, startInputsW, endInputsW)
     
     ################################
     # Now combine the U, V and W branches
     ################################
-    combined = keras.layers.Concatenate()([branchU, branchV, branchW])
+    combined = Concatenate()([branchU, branchV, branchW])
         
     ################################
     # Now add in the trackVars
     ################################
-    trackVarsInputs = keras.Input(shape=(nTrackVars,))
-    combined = keras.layers.Concatenate()([combined, trackVarsInputs])
+    trackVarsInputs = Input(shape=(nTrackVars,))
+    combined = Concatenate()([combined, trackVarsInputs])
 
     ################################
     # Now add in the showerVars
     ################################
-    trackVarsInputs = keras.Input(shape=(nShowerVars,))
-    combined = keras.layers.Concatenate()([combined, showerVarsInputs])
+    showerVarsInputs = Input(shape=(nShowerVars,))
+    combined = Concatenate()([combined, showerVarsInputs])
     
     ################################
     # FC layers
     ################################
-    combined = keras.layers.Dense(4096, activation="relu")(combined)
-    combined = keras.layers.Dropout(0.5)(combined)
-    combined = keras.layers.Dense(4096, activation="relu")(combined)
-    combined = keras.layers.Dropout(0.5)(combined)
+    combined = Dense(4096, activation="relu")(combined)
+    combined = Dropout(0.5)(combined)
+    combined = Dense(4096, activation="relu")(combined)
+    combined = Dropout(0.5)(combined)
 
     ################################
     # Now classify the image
     ################################
-    outputs = keras.layers.Dense(nclasses, activation="softmax")(combined)
+    outputs = Dense(nclasses, activation="softmax")(combined)
     
-    model = keras.Model(inputs=[startInputsU, endInputsU, startInputsV, endInputsV, startInputsW, endInputsW, trackVarsInputs, showerVarsInputs], outputs=outputs)
+    model = Model(inputs=[startInputsU, endInputsU, startInputsV, endInputsV, startInputsW, endInputsW, trackVarsInputs, showerVarsInputs], outputs=outputs)
     
     return model
 
@@ -67,46 +67,46 @@ def CreateViewBranch(dimensions, startInputs, endInputs):
     # Start branch
     ################################
     # 1 - 1 conv
-    startBranch = layers.Conv2D(filters=16, kernel_size=3, activation="relu", padding="same")(startInputs)
-    startBranch = layers.MaxPooling2D(pool_size=2, strides=2)(startBranch)
+    startBranch = Conv2D(filters=16, kernel_size=3, activation="relu", padding="same")(startInputs)
+    startBranch = MaxPooling2D(pool_size=2, strides=2)(startBranch)
     # 2 - 1 conv
-    startBranch = layers.Conv2D(filters=32, kernel_size=3, activation="relu", padding="same")(startBranch)
-    startBranch = layers.MaxPooling2D(pool_size=2, strides=2)(startBranch)
+    startBranch = Conv2D(filters=32, kernel_size=3, activation="relu", padding="same")(startBranch)
+    startBranch = MaxPooling2D(pool_size=2, strides=2)(startBranch)
     # 3 - 2 conv
-    startBranch = layers.Conv2D(filters=64, kernel_size=3, activation="relu", padding="same")(startBranch)
-    startBranch = layers.Conv2D(filters=64, kernel_size=3, activation="relu", padding="same")(startBranch)
-    startBranch = layers.MaxPooling2D(pool_size=2, strides=2)(startBranch)
+    startBranch = Conv2D(filters=64, kernel_size=3, activation="relu", padding="same")(startBranch)
+    startBranch = Conv2D(filters=64, kernel_size=3, activation="relu", padding="same")(startBranch)
+    startBranch = MaxPooling2D(pool_size=2, strides=2)(startBranch)
     # 4 - 2 conv
-    startBranch = layers.Conv2D(filters=128, kernel_size=3, activation="relu", padding="same")(startBranch)
-    startBranch = layers.Conv2D(filters=128, kernel_size=3, activation="relu", padding="same")(startBranch)
-    startBranch = layers.MaxPooling2D(pool_size=2, strides=2)(startBranch)
+    startBranch = Conv2D(filters=128, kernel_size=3, activation="relu", padding="same")(startBranch)
+    startBranch = Conv2D(filters=128, kernel_size=3, activation="relu", padding="same")(startBranch)
+    startBranch = MaxPooling2D(pool_size=2, strides=2)(startBranch)
     # 5 - Flatten
-    startBranch = layers.Flatten()(startBranch)
+    startBranch = Flatten()(startBranch)
 
     ################################
     # End branch
     ################################
     # 1 - 1 conv
-    endBranch = layers.Conv2D(filters=16, kernel_size=3, activation="relu", padding="same")(endInputs)
-    endBranch = layers.MaxPooling2D(pool_size=2, strides=2)(endBranch)
+    endBranch = Conv2D(filters=16, kernel_size=3, activation="relu", padding="same")(endInputs)
+    endBranch = MaxPooling2D(pool_size=2, strides=2)(endBranch)
     # 2 - 1 conv
-    endBranch = layers.Conv2D(filters=32, kernel_size=3, activation="relu", padding="same")(endBranch)
-    endBranch = layers.MaxPooling2D(pool_size=2, strides=2)(endBranch)
+    endBranch = Conv2D(filters=32, kernel_size=3, activation="relu", padding="same")(endBranch)
+    endBranch = MaxPooling2D(pool_size=2, strides=2)(endBranch)
     # 3 - 2 conv
-    endBranch = layers.Conv2D(filters=64, kernel_size=3, activation="relu", padding="same")(endBranch)
-    endBranch = layers.Conv2D(filters=64, kernel_size=3, activation="relu", padding="same")(endBranch)
-    endBranch = layers.MaxPooling2D(pool_size=2, strides=2)(endBranch)
+    endBranch = Conv2D(filters=64, kernel_size=3, activation="relu", padding="same")(endBranch)
+    endBranch = Conv2D(filters=64, kernel_size=3, activation="relu", padding="same")(endBranch)
+    endBranch = MaxPooling2D(pool_size=2, strides=2)(endBranch)
     # 4 - 2 conv
-    endBranch = layers.Conv2D(filters=128, kernel_size=3, activation="relu", padding="same")(endBranch)
-    endBranch = layers.Conv2D(filters=128, kernel_size=3, activation="relu", padding="same")(endBranch)
-    endBranch = layers.MaxPooling2D(pool_size=2, strides=2)(endBranch)
+    endBranch = Conv2D(filters=128, kernel_size=3, activation="relu", padding="same")(endBranch)
+    endBranch = Conv2D(filters=128, kernel_size=3, activation="relu", padding="same")(endBranch)
+    endBranch = MaxPooling2D(pool_size=2, strides=2)(endBranch)
     # 5 - Flatten
-    endBranch = layers.Flatten()(endBranch)
+    endBranch = Flatten()(endBranch)
 
     
     ################################
     # Now combine the start/end branches
     ################################
-    combined = keras.layers.Concatenate()([startBranch, endBranch])
+    combined = Concatenate()([startBranch, endBranch])
     
     return combined

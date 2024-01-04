@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH -p gpu-short
-#SBATCH --gres=gpu:1
-#SBATCH --mem=50G
+#SBATCH --gres=gpu:3
+#SBATCH --mem=150G
 #SBATCH --time=12:00:00
 #SBATCH --cpus-per-task=1
 #SBATCH --mail-type=END,FAIL
@@ -18,6 +18,6 @@ module add cuda
 module add anaconda3-gpu
 source activate opence_env
 
-python TrainIvysaurus.py
+python TrainIvysaurus.py '3'
 
 echo 'DONE'

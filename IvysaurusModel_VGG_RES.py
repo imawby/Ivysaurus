@@ -1,5 +1,5 @@
 from tensorflow.keras import Model, Input
-from tensorflow.keras.layers import Concatenate, Dense, Dropout, Conv2D, MaxPooling2D, Flatten, BatchNormalization, Activation
+from tensorflow.keras.layers import Concatenate, Dense, Dropout, Conv2D, MaxPooling2D, Flatten, add
 
 # start/endGrid.shape = (n, dimensions, dimensions, 1)
 def IvysaurusIChooseYou(dimensions, nclasses, nTrackVars, nShowerVars):
@@ -45,19 +45,16 @@ def IvysaurusIChooseYou(dimensions, nclasses, nTrackVars, nShowerVars):
     ################################
     # FC layers
     ################################
-    combined = Dense(4096, use_bias=False)(combined)
-    combined = BatchNormalization()(combined)
-    combined = Activation('relu')(combined)
+    combined = Dense(4096, activation="relu")(combined)
     combined = Dropout(0.5)(combined)
-    combined = Dense(4096, use_bias=False)(combined)
-    combined = BatchNormalization()(combined)
-    combined = Activation('relu')(combined)
+    combined = Dense(4096, activation="relu")(combined)
     combined = Dropout(0.5)(combined)
 
     ################################
     # Now classify the image
     ################################
     outputs = Dense(nclasses, activation="softmax")(combined)
+    
     model = Model(inputs=[startInputsU, endInputsU, startInputsV, endInputsV, startInputsW, endInputsW, trackVarsInputs, showerVarsInputs], outputs=outputs)
     
     return model
@@ -70,31 +67,28 @@ def CreateViewBranch(dimensions, startInputs, endInputs):
     # Start branch
     ################################
     # 1 - 1 conv
-    startBranch = Conv2D(filters=16, kernel_size=3, padding="same", use_bias=False)(startInputs)
-    startBranch = BatchNormalization()(startBranch)
-    startBranch = Activation('relu')(startBranch)
+    startBranch = Conv2D(filters=16, kernel_size=3, activation="relu", padding="same")(startInputs)
+    #startBranch = MaxPooling2D(pool_size=2, strides=2)(startBranch)
+    # 2 - 1 conv with res
+    res = startBranch
+    res = Conv2D(filters=32, kernel_size=1, strides=2, use_bias=False, padding="same")(res)
+    startBranch = Conv2D(filters=32, kernel_size=3, activation="relu", padding="same")(startBranch)
     startBranch = MaxPooling2D(pool_size=2, strides=2)(startBranch)
-    # 2 - 1 conv
-    startBranch = Conv2D(filters=32, kernel_size=3, padding="same", use_bias=False)(startBranch)
-    startBranch = BatchNormalization()(startBranch)
-    startBranch = Activation('relu')(startBranch)
-    startBranch = MaxPooling2D(pool_size=2, strides=2)(startBranch)
+    startBranch = add([res, startBranch])
     # 3 - 2 conv
-    startBranch = Conv2D(filters=64, kernel_size=3, padding="same", use_bias=False)(startBranch)
-    startBranch = BatchNormalization()(startBranch)
-    startBranch = Activation('relu')(startBranch)
-    startBranch = Conv2D(filters=64, kernel_size=3, padding="same", use_bias=False)(startBranch)
-    startBranch = BatchNormalization()(startBranch)
-    startBranch = Activation('relu')(startBranch)
+    res = startBranch
+    res = Conv2D(filters=64, kernel_size=1, strides=2, use_bias=False, padding="same")(res)
+    startBranch = Conv2D(filters=64, kernel_size=3, activation="relu", padding="same")(startBranch)
+    startBranch = Conv2D(filters=64, kernel_size=3, activation="relu", padding="same")(startBranch)
     startBranch = MaxPooling2D(pool_size=2, strides=2)(startBranch)
+    startBranch = add([res, startBranch])    
     # 4 - 2 conv
-    startBranch = Conv2D(filters=128, kernel_size=3, padding="same", use_bias=False)(startBranch)
-    startBranch = BatchNormalization()(startBranch)
-    startBranch = Activation('relu')(startBranch)
-    startBranch = Conv2D(filters=128, kernel_size=3, padding="same", use_bias=False)(startBranch)
-    startBranch = BatchNormalization()(startBranch)
-    startBranch = Activation('relu')(startBranch)
+    res = startBranch
+    res = Conv2D(filters=128, kernel_size=1, strides=2, use_bias=False, padding="same")(res)    
+    startBranch = Conv2D(filters=128, kernel_size=3, activation="relu", padding="same")(startBranch)
+    startBranch = Conv2D(filters=128, kernel_size=3, activation="relu", padding="same")(startBranch)
     startBranch = MaxPooling2D(pool_size=2, strides=2)(startBranch)
+    startBranch = add([res, startBranch])    
     # 5 - Flatten
     startBranch = Flatten()(startBranch)
 
@@ -102,34 +96,31 @@ def CreateViewBranch(dimensions, startInputs, endInputs):
     # End branch
     ################################
     # 1 - 1 conv
-    endBranch = Conv2D(filters=16, kernel_size=3, padding="same", use_bias=False)(endInputs)
-    endBranch = BatchNormalization()(endBranch)
-    endBranch = Activation('relu')(endBranch)
+    endBranch = Conv2D(filters=16, kernel_size=3, activation="relu", padding="same")(endInputs)
+    #endBranch = MaxPooling2D(pool_size=2, strides=2)(endBranch)
+    # 2 - 1 conv with res
+    res = endBranch
+    res = Conv2D(filters=32, kernel_size=1, strides=2, use_bias=False, padding="same")(res)
+    endBranch = Conv2D(filters=32, kernel_size=3, activation="relu", padding="same")(endBranch)
     endBranch = MaxPooling2D(pool_size=2, strides=2)(endBranch)
-    # 2 - 1 conv
-    endBranch = Conv2D(filters=32, kernel_size=3, padding="same", use_bias=False)(endBranch)
-    endBranch = BatchNormalization()(endBranch)
-    endBranch = Activation('relu')(endBranch)
-    endBranch = MaxPooling2D(pool_size=2, strides=2)(endBranch)
+    endBranch = add([res, endBranch])
     # 3 - 2 conv
-    endBranch = Conv2D(filters=64, kernel_size=3, padding="same", use_bias=False)(endBranch)
-    endBranch = BatchNormalization()(endBranch)
-    endBranch = Activation('relu')(endBranch)
-    endBranch = Conv2D(filters=64, kernel_size=3, padding="same", use_bias=False)(endBranch)
-    endBranch = BatchNormalization()(endBranch)
-    endBranch = Activation('relu')(endBranch)
+    res = endBranch
+    res = Conv2D(filters=64, kernel_size=1, strides=2, use_bias=False, padding="same")(res)
+    endBranch = Conv2D(filters=64, kernel_size=3, activation="relu", padding="same")(endBranch)
+    endBranch = Conv2D(filters=64, kernel_size=3, activation="relu", padding="same")(endBranch)
     endBranch = MaxPooling2D(pool_size=2, strides=2)(endBranch)
+    endBranch = add([res, endBranch])    
     # 4 - 2 conv
-    endBranch = Conv2D(filters=128, kernel_size=3, padding="same", use_bias=False)(endBranch)
-    endBranch = BatchNormalization()(endBranch)
-    endBranch = Activation('relu')(endBranch)
-    endBranch = Conv2D(filters=128, kernel_size=3, padding="same", use_bias=False)(endBranch)
-    endBranch = BatchNormalization()(endBranch)
-    endBranch = Activation('relu')(endBranch)
+    res = endBranch
+    res = Conv2D(filters=128, kernel_size=1, strides=2, use_bias=False, padding="same")(res)    
+    endBranch = Conv2D(filters=128, kernel_size=3, activation="relu", padding="same")(endBranch)
+    endBranch = Conv2D(filters=128, kernel_size=3, activation="relu", padding="same")(endBranch)
     endBranch = MaxPooling2D(pool_size=2, strides=2)(endBranch)
+    endBranch = add([res, endBranch])    
     # 5 - Flatten
     endBranch = Flatten()(endBranch)
-    
+
     ################################
     # Now combine the start/end branches
     ################################

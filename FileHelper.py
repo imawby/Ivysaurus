@@ -145,6 +145,7 @@ def readTree(fileNames, dimensions, nClasses) :
     ###################################
     # Normalise the start and end grids
     ###################################
+    '''
     energyLimit = 0.01
 
     startGridU[startGridU > energyLimit] = energyLimit
@@ -164,7 +165,7 @@ def readTree(fileNames, dimensions, nClasses) :
     
     endGridW[endGridW > energyLimit] = energyLimit
     endGridW = endGridW / energyLimit
-
+    '''
     
     ###################################
     # Normalise track vars
@@ -266,6 +267,144 @@ def readTree(fileNames, dimensions, nClasses) :
     print('startGridV: ', startGridV.shape)
     
     return nEntries, startGridU, startGridV, startGridW, endGridU, endGridV, endGridW, trackVars, showerVars, y
+
+#################################################################################################################
+#################################################################################################################
+
+def readGrids(fileNames, displacement) :
+
+    ###################################
+    # Grid lists
+    ###################################
+    startGridU = []
+    startGridV = []
+    startGridW = []
+    
+    startGridU_disp = []
+    startGridV_disp = []
+    startGridW_disp = []
+    
+    endGridU = []
+    endGridV = []
+    endGridW = []
+    
+    endGridU_disp = []
+    endGridV_disp = []
+    endGridW_disp = []
+    
+    particlePDG = []
+    
+    nEntries = 0
+    
+    for fileName in fileNames :
+        print('Reading tree: ', str(fileName),', This may take a while...')
+    
+        treeFile = uproot.open(fileName)
+        tree = treeFile['ivyTrain/ivysaur']
+        branches = tree.arrays()
+        
+        nEntries += len(branches)
+    
+        startGridU.extend(branches['StartGridU'])
+        startGridV.extend(branches['StartGridV'])
+        startGridW.extend(branches['StartGridW'])
+        endGridU.extend(branches['EndGridU'])
+        endGridV.extend(branches['EndGridV'])
+        endGridW.extend(branches['EndGridW'])
+        
+        startGridU_disp.extend(branches['StartGridUDisp'])
+        startGridV_disp.extend(branches['StartGridVDisp'])
+        startGridW_disp.extend(branches['StartGridWDisp'])
+        endGridU_disp.extend(branches['EndGridUDisp'])
+        endGridV_disp.extend(branches['EndGridVDisp'])
+        endGridW_disp.extend(branches['EndGridWDisp'])
+        
+        particlePDG.extend(branches['TruePDG'])
+        
+        
+    ###################################
+    # Now turn things into numpy arrays
+    ###################################
+    startGridU = np.array(startGridU)
+    startGridV = np.array(startGridV)    
+    startGridW = np.array(startGridW)   
+    endGridU = np.array(endGridU)
+    endGridV = np.array(endGridV)
+    endGridW = np.array(endGridW)
+    
+    startGridU_disp = np.array(startGridU_disp)
+    startGridV_disp = np.array(startGridV_disp)    
+    startGridW_disp = np.array(startGridW_disp)   
+    endGridU_disp = np.array(endGridU_disp)
+    endGridV_disp = np.array(endGridV_disp)
+    endGridW_disp = np.array(endGridW_disp)
+    
+    particlePDG = np.array(particlePDG)
+    
+    ###################################
+    # Reshape
+    ###################################
+    startGridU = startGridU.reshape((nEntries, dimensions, dimensions, 1))
+    startGridV = startGridV.reshape((nEntries, dimensions, dimensions, 1))
+    startGridW = startGridW.reshape((nEntries, dimensions, dimensions, 1))
+    endGridU = endGridU.reshape((nEntries, dimensions, dimensions, 1))
+    endGridV = endGridV.reshape((nEntries, dimensions, dimensions, 1))
+    endGridW = endGridW.reshape((nEntries, dimensions, dimensions, 1))
+
+    startGridU_disp = startGridU_disp.reshape((nEntries, dimensions, dimensions, 1))
+    startGridV_disp = startGridV_disp.reshape((nEntries, dimensions, dimensions, 1))
+    startGridW_disp = startGridW_disp.reshape((nEntries, dimensions, dimensions, 1))
+    endGridU_disp = endGridU_disp.reshape((nEntries, dimensions, dimensions, 1))
+    endGridV_disp = endGridV_disp.reshape((nEntries, dimensions, dimensions, 1))
+    endGridW_disp = endGridW_disp.reshape((nEntries, dimensions, dimensions, 1))
+    
+    
+    particlePDG = particlePDG.reshape((nEntries, 1))
+    
+    ###################################
+    # Normalise the start and end grids
+    ###################################
+    '''
+    energyLimit = 0.01
+
+    startGridU[startGridU > energyLimit] = energyLimit
+    startGridU = startGridU / energyLimit
+    
+    startGridV[startGridV > energyLimit] = energyLimit
+    startGridV = startGridV / energyLimit
+    
+    startGridW[startGridW > energyLimit] = energyLimit
+    startGridW = startGridW / energyLimit
+    
+    endGridU[endGridU > energyLimit] = energyLimit
+    endGridU = endGridU / energyLimit
+    
+    endGridV[endGridV > energyLimit] = energyLimit
+    endGridV = endGridV / energyLimit
+    
+    endGridW[endGridW > energyLimit] = energyLimit
+    endGridW = endGridW / energyLimit
+    '''
+
+    # Refinement of the particlePDG vector
+    print('We have ', str(nEntries), ' PFParticles overall!')
+    print('nMuons: ', np.count_nonzero(abs(particlePDG) == 13))
+    print('nProtons: ', np.count_nonzero(abs(particlePDG) == 2212))    
+    print('nPions: ', np.count_nonzero(abs(particlePDG) == 211))     
+    print('nElectrons: ', np.count_nonzero(abs(particlePDG) == 11))     
+    print('nPhotons: ', np.count_nonzero(abs(particlePDG) == 22))     
+   
+    # muons = 0, protons = 1, pions = 2, electrons = 3, photons = 4
+    particlePDG[abs(particlePDG) == 13] = 0
+    particlePDG[abs(particlePDG) == 2212] = 1
+    particlePDG[abs(particlePDG) == 211] = 2
+    particlePDG[abs(particlePDG) == 11] = 3
+    particlePDG[abs(particlePDG) == 22] = 4
+    
+    y = to_categorical(particlePDG, nClasses)
+    
+    return nEntries, startGridU, startGridV, startGridW, endGridU, endGridV, endGridW, startGridU_disp, startGridV_disp, startGridW_disp, endGridU_disp, endGridV_disp, endGridW_disp, y
+
 
 #################################################################################################################
 #################################################################################################################

@@ -6,17 +6,9 @@ def IvysaurusIChooseYou(nvars, nclasses):
     varsInputs = Input(shape=(nvars,))
     
     ################################
-    # FC layers
-    ################################
-    combined = Dense(4096, activation="relu")(combined)
-    combined = Dropout(0.5)(combined)
-    combined = Dense(4096, activation="relu")(combined)
-    combined = Dropout(0.5)(combined)
-
-    ################################
     # Now classify the image
     ################################
-    outputs = Dense(nclasses, activation="softmax")(combined)
+    outputs = Dense(nclasses, activation="softmax")(varsInputs)
 
     ################################
     # Define model

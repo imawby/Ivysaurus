@@ -10,6 +10,7 @@ print('222')
 import tensorflow
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.callbacks import ReduceLROnPlateau
+from tensorflow.keras.callbacks import ModelCheckpoint
 
 print('333')
 
@@ -107,7 +108,7 @@ y_test = np.empty((0, nClasses))
 print('CCCCCCC')
 
 # Get training file
-trainFileNames = glob.glob('/storage/users/mawbyi1/Ivysaurus/files/grid24/*/ivysaurus_*.npz')
+trainFileNames = glob.glob('/storage/users/mawbyi1/Ivysaurus/files/gaussian/*/ivysaurus_*.npz')
 print(trainFileNames)
 
 for trainFileName in trainFileNames :
@@ -137,6 +138,50 @@ for trainFileName in trainFileNames :
     y_test = np.concatenate((y_test, data['y_test']), axis=0)
 
 print('DDDDDDD')
+
+###########################################################
+
+# I need to normalise the displacement grid here..
+
+print('Normalising displacement grid wrt all other grids...')
+
+dispLimit = 295.0
+
+startGridU_disp_train[startGridU_disp_train > dispLimit] = dispLimit
+startGridU_disp_train = startGridU_disp_train / dispLimit
+    
+startGridV_disp_train[startGridV_disp_train > dispLimit] = dispLimit
+startGridV_disp_train = startGridV_disp_train / dispLimit
+    
+startGridW_disp_train[startGridW_disp_train > dispLimit] = dispLimit
+startGridW_disp_train = startGridW_disp_train / dispLimit
+    
+endGridU_disp_train[endGridU_disp_train > dispLimit] = dispLimit
+endGridU_disp_train = endGridU_disp_train / dispLimit
+    
+endGridV_disp_train[endGridV_disp_train > dispLimit] = dispLimit
+endGridV_disp_train = endGridV_disp_train / dispLimit
+    
+endGridW_disp_train[endGridW_disp_train > dispLimit] = dispLimit
+endGridW_disp_train = endGridW_disp_train / dispLimit
+
+startGridU_disp_test[startGridU_disp_test > dispLimit] = dispLimit
+startGridU_disp_test = startGridU_disp_test / dispLimit
+    
+startGridV_disp_test[startGridV_disp_test > dispLimit] = dispLimit
+startGridV_disp_test = startGridV_disp_test / dispLimit
+    
+startGridW_disp_test[startGridW_disp_test > dispLimit] = dispLimit
+startGridW_disp_test = startGridW_disp_test / dispLimit
+    
+endGridU_disp_test[endGridU_disp_test > dispLimit] = dispLimit
+endGridU_disp_test = endGridU_disp_test / dispLimit
+    
+endGridV_disp_test[endGridV_disp_test > dispLimit] = dispLimit
+endGridV_disp_test = endGridV_disp_test / dispLimit
+    
+endGridW_disp_test[endGridW_disp_test > dispLimit] = dispLimit
+endGridW_disp_test = endGridW_disp_test / dispLimit
 
 ###########################################################
 
@@ -200,26 +245,31 @@ print(classWeights)
 
 # Fit that model!
 
+if (MODE_VGG == '0') :
+   filePath = '/storage/users/mawbyi1/Ivysaurus/files/gaussian/my_model_disp_VGG'
+elif (MODE_VGG == '1') :
+   filePath = '/storage/users/mawbyi1/Ivysaurus/files/gaussian/my_model_disp_VGG_BN'
+elif (MODE_VGG == '2') :
+   filePath = '/storage/users/mawbyi1/Ivysaurus/files/gaussian/my_model_disp_VGG_SEP'
+elif (MODE_VGG == '3') :
+   filePath = '/storage/users/mawbyi1/Ivysaurus/files/gaussian/my_model_disp_VGG_EX'
+elif (MODE_VGG == '4') :
+   filePath = '/storage/users/mawbyi1/Ivysaurus/files/gaussian/my_model_disp_VGG_RES'
+
+# checkpoint
+checkpoint = ModelCheckpoint(filePath, monitor='val_accuracy', verbose=1, save_best_only=True, mode='max')
+
 # Reduce the learning rate by a factor of ten when required
 reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=2, min_lr=1e-6, verbose=1)
+
+callbacks_list = [checkpoint, reduce_lr]
+   
 history = ivysaurusDisp.fit([startGridU_disp_train, endGridU_disp_train, startGridV_disp_train, endGridV_disp_train, startGridW_disp_train, endGridW_disp_train], y_train, 
     batch_size = batchSize, validation_data=([startGridU_disp_test, endGridU_disp_test, startGridV_disp_test, endGridV_disp_test, startGridW_disp_test, endGridW_disp_test], y_test), 
-    shuffle=True, epochs=nEpochs, class_weight=classWeights, callbacks=[reduce_lr], verbose=2)
+    shuffle=True, epochs=nEpochs, class_weight=classWeights, callbacks=callbacks_list, verbose=2)
 
 ###########################################################
 
-# Save the model
+# FIN!
 
-print('Saving model...')
-
-if (MODE_VGG == '0') :
-   ivysaurusCNN.save('/home/hpc/30/mawbyi1/Ivysaurus/files/grid24/my_model_disp_VGG')
-elif (MODE_VGG == '1') :
-   ivysaurusCNN.save('/home/hpc/30/mawbyi1/Ivysaurus/files/grid24/my_model_disp_VGG_BN')
-elif (MODE_VGG == '2') :
-   ivysaurusCNN.save('/home/hpc/30/mawbyi1/Ivysaurus/files/grid24/my_model_disp_VGG_SEP')
-elif (MODE_VGG == '3') :
-   ivysaurusCNN.save('/home/hpc/30/mawbyi1/Ivysaurus/files/grid24/my_model_disp_VGG_EX')
-elif (MODE_VGG == '4') :
-   ivysaurusCNN.save('/home/hpc/30/mawbyi1/Ivysaurus/files/grid24/my_model_disp_VGG_RES')
-
+print('DONE!')

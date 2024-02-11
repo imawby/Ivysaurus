@@ -20,6 +20,6 @@ module add cuda
 module add anaconda3-gpu
 source activate opence_env
 
-python TrainIvysaurus.py
+python TrainIvysaurusCalo.py '0'
 
 echo 'DONE'

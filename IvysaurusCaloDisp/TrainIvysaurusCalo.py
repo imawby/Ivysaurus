@@ -10,6 +10,7 @@ print('222')
 import tensorflow
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.callbacks import ReduceLROnPlateau
+from tensorflow.keras.callbacks import ModelCheckpoint
 
 print('333')
 
@@ -107,7 +108,7 @@ y_test = np.empty((0, nClasses))
 print('CCCCCCC')
 
 # Get training file
-trainFileNames = glob.glob('/storage/users/mawbyi1/Ivysaurus/files/grid24/*/ivysaurus_*.npz')
+trainFileNames = glob.glob('/storage/users/mawbyi1/Ivysaurus/files/gaussian/*/ivysaurus_*.npz')
 print(trainFileNames)
 
 for trainFileName in trainFileNames :
@@ -116,25 +117,25 @@ for trainFileName in trainFileNames :
     data = np.load(trainFileName)
 
     # Calo grids
-    startGridU_calo_train = np.concatenate((startGridU_calo_train, data['startGridU_test']), axis=0)
-    startGridV_calo_train = np.concatenate((startGridV_calo_train, data['startGridV_test']), axis=0)
-    startGridW_calo_train = np.concatenate((startGridW_calo_train, data['startGridW_test']), axis=0)
+    startGridU_calo_train = np.concatenate((startGridU_calo_train, data['startGridU_calo_train']), axis=0)
+    startGridV_calo_train = np.concatenate((startGridV_calo_train, data['startGridV_calo_train']), axis=0)
+    startGridW_calo_train = np.concatenate((startGridW_calo_train, data['startGridW_calo_train']), axis=0)
 
-    endGridU_calo_train = np.concatenate((endGridU_calo_train, data['endGridU_test']), axis=0)
-    endGridV_calo_train = np.concatenate((endGridV_calo_train, data['endGridV_test']), axis=0)
-    endGridW_calo_train = np.concatenate((endGridW_calo_train, data['endGridW_test']), axis=0)
+    endGridU_calo_train = np.concatenate((endGridU_calo_train, data['endGridU_calo_train']), axis=0)
+    endGridV_calo_train = np.concatenate((endGridV_calo_train, data['endGridV_calo_train']), axis=0)
+    endGridW_calo_train = np.concatenate((endGridW_calo_train, data['endGridW_calo_train']), axis=0)
     
-    startGridU_calo_test = np.concatenate((startGridU_calo_test, data['startGridU_train']), axis=0)
-    startGridV_calo_test = np.concatenate((startGridV_calo_test, data['startGridV_train']), axis=0) 
-    startGridW_calo_test = np.concatenate((startGridW_calo_test, data['startGridW_train']), axis=0)
+    startGridU_calo_test = np.concatenate((startGridU_calo_test, data['startGridU_calo_test']), axis=0)
+    startGridV_calo_test = np.concatenate((startGridV_calo_test, data['startGridV_calo_test']), axis=0) 
+    startGridW_calo_test = np.concatenate((startGridW_calo_test, data['startGridW_calo_test']), axis=0)
     
-    endGridU_calo_test = np.concatenate((endGridU_calo_test, data['endGridU_train']), axis=0)
-    endGridV_calo_test = np.concatenate((endGridV_calo_test, data['endGridV_train']), axis=0)
-    endGridW_calo_test = np.concatenate((endGridW_calo_test, data['endGridW_train']), axis=0)
+    endGridU_calo_test = np.concatenate((endGridU_calo_test, data['endGridU_calo_test']), axis=0)
+    endGridV_calo_test = np.concatenate((endGridV_calo_test, data['endGridV_calo_test']), axis=0)
+    endGridW_calo_test = np.concatenate((endGridW_calo_test, data['endGridW_calo_test']), axis=0)
 
     # Truth
-    y_train = np.concatenate((y_train, data['y_test']), axis=0)
-    y_test = np.concatenate((y_test, data['y_train']), axis=0)
+    y_train = np.concatenate((y_train, data['y_train']), axis=0)
+    y_test = np.concatenate((y_test, data['y_test']), axis=0)
 
 print('DDDDDDD')
 
@@ -202,26 +203,34 @@ print(classWeights)
 
 # Fit that model!
 
+if (MODE_VGG == '0') :
+   filePath = '/storage/users/mawbyi1/Ivysaurus/files/gaussian/my_model_calo_VGG'
+elif (MODE_VGG == '1') :
+   filePath = '/storage/users/mawbyi1/Ivysaurus/files/gaussian/my_model_calo_VGG_BN'
+elif (MODE_VGG == '2') :
+   filePath = '/storage/users/mawbyi1/Ivysaurus/files/gaussian/my_model_calo_VGG_SEP'
+elif (MODE_VGG == '3') :
+   filePath = '/storage/users/mawbyi1/Ivysaurus/files/gaussian/my_model_calo_VGG_EX'
+elif (MODE_VGG == '4') :
+   filePath = '/storage/users/mawbyi1/Ivysaurus/files/gaussian/my_model_calo_VGG_RES'
+
+# checkpoint
+checkpoint = ModelCheckpoint(filePath, monitor='val_accuracy', verbose=1, save_best_only=True, mode='max')
+
 # Reduce the learning rate by a factor of ten when required
 reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=2, min_lr=1e-6, verbose=1)
+
+callbacks_list = [checkpoint, reduce_lr]
+
 history = ivysaurusCalo.fit([startGridU_calo_train, endGridU_calo_train, startGridV_calo_train, endGridV_calo_train, startGridW_calo_train, endGridW_calo_train], y_train, 
     batch_size = batchSize, validation_data=([startGridU_calo_test, endGridU_calo_test, startGridV_calo_test, endGridV_calo_test, startGridW_calo_test, endGridW_calo_test], y_test), 
-    shuffle=True, epochs=nEpochs, class_weight=classWeights, callbacks=[reduce_lr], verbose=2)
+    shuffle=True, epochs=nEpochs, class_weight=classWeights, callbacks=callbacks_list, verbose=2)
 
 ###########################################################
 
-# Save the model
+# FIN!
 
-print('Saving model...')
+print('DONE!')
 
-if (MODE_VGG == '0') :
-   ivysaurusCNN.save('/home/hpc/30/mawbyi1/Ivysaurus/files/grid24/my_model_calo_VGG')
-elif (MODE_VGG == '1') :
-   ivysaurusCNN.save('/home/hpc/30/mawbyi1/Ivysaurus/files/grid24/my_model_calo_VGG_BN')
-elif (MODE_VGG == '2') :
-   ivysaurusCNN.save('/home/hpc/30/mawbyi1/Ivysaurus/files/grid24/my_model_calo_VGG_SEP')
-elif (MODE_VGG == '3') :
-   ivysaurusCNN.save('/home/hpc/30/mawbyi1/Ivysaurus/files/grid24/my_model_calo_VGG_EX')
-elif (MODE_VGG == '4') :
-   ivysaurusCNN.save('/home/hpc/30/mawbyi1/Ivysaurus/files/grid24/my_model_calo_VGG_RES')
+
 

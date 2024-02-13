@@ -362,16 +362,7 @@ print(classWeights)
 
 # Fit that model!
 
-if (MODE_VGG == '0') :
-   filePath = '/storage/users/mawbyi1/Ivysaurus/files/gaussian/my_model_combined_VGG'
-elif (MODE_VGG == '1') :
-   filePath = '/storage/users/mawbyi1/Ivysaurus/files/gaussian/my_model_combined_VGG_BN'
-elif (MODE_VGG == '2') :
-   filePath = '/storage/users/mawbyi1/Ivysaurus/files/gaussian/my_model_combined_VGG_SEP'
-elif (MODE_VGG == '3') :
-   filePath = '/storage/users/mawbyi1/Ivysaurus/files/gaussian/my_model_combined_VGG_EX'
-elif (MODE_VGG == '4') :
-   filePath = '/storage/users/mawbyi1/Ivysaurus/files/gaussian/my_model_combined_VGG_RES'
+filePath = '/storage/users/mawbyi1/Ivysaurus/files/gaussian/my_model_combined_VGG'
 
 # checkpoint
 checkpoint = ModelCheckpoint(filePath, monitor='val_accuracy', verbose=1, save_best_only=True, mode='max')

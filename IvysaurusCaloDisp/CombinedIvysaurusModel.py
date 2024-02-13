@@ -8,7 +8,14 @@ def IvysaurusIChooseYou(nvars, nclasses):
     ################################
     # Now classify the image
     ################################
-    outputs = Dense(nclasses, activation="softmax")(varsInputs)
+    x = Dense(128, activation="relu", kernel_initializer='lecun_uniform')(varsInputs)
+    #x = Dropout(dropoutRate)(x)
+    x = Dense(128, activation="relu", kernel_initializer='lecun_uniform')(x)
+    #x = Dropout(dropoutRate)(x)
+    x = Dense(64, activation="relu", kernel_initializer='lecun_uniform')(x)
+    #x = Dropout(dropoutRate)(x)
+    
+    outputs = Dense(nclasses, activation="softmax")(x)
 
     ################################
     # Define model

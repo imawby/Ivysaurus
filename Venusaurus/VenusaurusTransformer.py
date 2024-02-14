@@ -8,7 +8,7 @@ import numpy as np
 
 def TransformerModel(sequenceLength, nvocab, nclasses, embedDim):
 
-    dedxInput = Input(shape=(sequenceLength, 1), dtype="int64")
+    dedxInput = Input(shape=(sequenceLength), dtype="int64")
     
     ################################
     # First, embedding
@@ -18,7 +18,7 @@ def TransformerModel(sequenceLength, nvocab, nclasses, embedDim):
     ################################
     # Now transformer
     ################################ 
-    numHeads = 2
+    numHeads = 6
     denseDim = 32
     
     embedded = TransformerEncoder(embedDim, numHeads, denseDim)(embedded)
@@ -48,7 +48,7 @@ class PositionalEmbedding(Layer):
         self.sequenceLength = sequenceLength
         self.vocabLength = vocabLength
         self.embedDim = embedDim
-        self.tokenEmbeddings = Embedding(input_dim=vocabLength, output_dim=embedDim, mask_zero=True)
+        self.tokenEmbeddings = Embedding(input_dim=vocabLength, output_dim=embedDim, mask_zero=False)
         self.positionEmbeddings = self.positional_encoding(sequenceLength, embedDim)
 
     def call(self, inputs):

@@ -18,42 +18,15 @@ from sklearn.utils import class_weight
 
 print('444')
 
-import IvysaurusModel
-import IvysaurusModel_VGG
-import IvysaurusModel_VGG_BN
-import IvysaurusModel_VGG_SEP
-import IvysaurusModel_VGG_EX
-import IvysaurusModel_VGG_RES
-import IvysaurusModel_VGG_INV
+import IvysaurusModel_VGG_BN_VARS
 
 print('555')
 
 ###########################################################
 ###########################################################
 
-def WhoseThatPokemon(ndimensions, nclasses, mode) :
-    
-   if (mode == '0') :
-      print('IvysaurusModel_VGG')
-      return IvysaurusModel_VGG.IvysaurusIChooseYou(ndimensions, nclasses)
-   elif (mode == '1') :
-      print('IvysaurusModel_VGG_BN')
-      return IvysaurusModel_VGG_BN.IvysaurusIChooseYou(ndimensions, nclasses)
-   elif (mode == '2') :
-      print('IvysaurusModel_VGG_SEP')
-      return IvysaurusModel_VGG_SEP.IvysaurusIChooseYou(ndimensions, nclasses)
-   elif (mode == '3') :
-      print('IvysaurusModel_VGG_EX')
-      return IvysaurusModel_VGG_EX.IvysaurusIChooseYou(ndimensions, nclasses)
-   elif (mode == '4') :
-      print('IvysaurusModel_VGG_RES')
-      return IvysaurusModel_VGG_RES.IvysaurusIChooseYou(ndimensions, nclasses)
-   elif (mode == '5') :
-      print('IvysaurusModel_VGG_INV')
-      return IvysaurusModel_VGG_INV.IvysaurusIChooseYou(ndimensions, nclasses)
-
-   return IvysaurusModel_VGG.IvysaurusIChooseYou(ndimensions, nclasses)
-      
+def WhoseThatPokemon(ndimensions, nclasses, nTrackVars, nShowerVars) :
+    return IvysaurusModel_VGG_BN_VARS.IvysaurusIChooseYou(ndimensions, nclasses, nTrackVars, nShowerVars)
 
 ###########################################################
 ###########################################################
@@ -71,12 +44,11 @@ print('1111111')
 ###########################################################
 
 # VGG, VGG_BN, VGG_SEP, VGG_EX, VGG_RES, VGG_INV
-MODE_VGG = sys.argv[1]
-
-print('MODE_VGG: ', MODE_VGG)
-
 dimensions = 24
 nClasses = 5
+
+nTrackVars = 10 # nTrackChildren, nShowerChildren, nGrandChildren, nChildHits, childEnergy, childTrackScore, trackLength, trackWobble, trackScore, momComparison
+nShowerVars = 16 # displacement, dca, trackStubLength
 
 nEpochs = 10
 batchSize = 64
@@ -104,6 +76,13 @@ startGridW_calo_test = np.empty((0, dimensions, dimensions, 1))
 endGridU_calo_test = np.empty((0, dimensions, dimensions, 1))
 endGridV_calo_test = np.empty((0, dimensions, dimensions, 1))
 endGridW_calo_test = np.empty((0, dimensions, dimensions, 1))
+
+# Track and shower vars
+trackVars_train = np.empty((0, nTrackVars))
+showerVars_train = np.empty((0, nShowerVars))
+
+trackVars_test = np.empty((0, nTrackVars))
+showerVars_test = np.empty((0, nShowerVars))
 
 # Truth
 y_train = np.empty((0, nClasses))
@@ -137,6 +116,12 @@ for trainFileName in trainFileNames :
     endGridV_calo_test = np.concatenate((endGridV_calo_test, data['endGridV_calo_test']), axis=0)
     endGridW_calo_test = np.concatenate((endGridW_calo_test, data['endGridW_calo_test']), axis=0)
 
+    # Track and shower vars    
+    trackVars_train = np.concatenate((trackVars_train, data['trackVars_train']), axis=0)
+    trackVars_test = np.concatenate((trackVars_test, data['trackVars_test']), axis=0)
+    showerVars_train = np.concatenate((showerVars_train, data['showerVars_train']), axis=0)
+    showerVars_test = np.concatenate((showerVars_test, data['showerVars_test']), axis=0)
+    
     # Truth
     y_train = np.concatenate((y_train, data['y_train']), axis=0)
     y_test = np.concatenate((y_test, data['y_test']), axis=0)
@@ -162,6 +147,13 @@ print('endGridU_calo_test: ', endGridU_calo_test.shape)
 print('endGridV_calo_test: ', endGridV_calo_test.shape)     
 print('endGridW_calo_test: ', endGridW_calo_test.shape)
 
+# Track and shower vars
+print('trackVars_train: ', trackVars_train.shape)    
+print('showerVars_train: ', showerVars_train.shape)  
+
+print('trackVars_test: ', trackVars_test.shape)
+print('showerVars_test: ', showerVars_test.shape)  
+
 # Truth
 print('y_train: ', y_train.shape)
 print('y_test', y_test.shape)
@@ -173,8 +165,7 @@ mirrored_strategy = tensorflow.distribute.MultiWorkerMirroredStrategy()
 print('Number of devices: {}'.format(mirrored_strategy.num_replicas_in_sync))
 
 with mirrored_strategy.scope():
-   # VGG, VGG_BN, VGG_SEP, VGG_EX, VGG_RES, VGG_INV
-   ivysaurusCalo = WhoseThatPokemon(dimensions, nClasses, MODE_VGG)
+   ivysaurusCalo = WhoseThatPokemon(dimensions, nClasses, nTrackVars, nShowerVars)
    ivysaurusCalo.summary()
 
    # Define the optimiser and compile the model
@@ -206,19 +197,7 @@ print(classWeights)
 ###########################################################
 
 # Fit that model!
-
-if (MODE_VGG == '0') :
-   filePath = '/storage/users/mawbyi1/Ivysaurus/files/gaussian/my_model_calo_VGG'
-elif (MODE_VGG == '1') :
-   filePath = '/storage/users/mawbyi1/Ivysaurus/files/gaussian/my_model_calo_VGG_BN'
-elif (MODE_VGG == '2') :
-   filePath = '/storage/users/mawbyi1/Ivysaurus/files/gaussian/my_model_calo_VGG_SEP'
-elif (MODE_VGG == '3') :
-   filePath = '/storage/users/mawbyi1/Ivysaurus/files/gaussian/my_model_calo_VGG_EX'
-elif (MODE_VGG == '4') :
-   filePath = '/storage/users/mawbyi1/Ivysaurus/files/gaussian/my_model_calo_VGG_RES'
-elif (MODE_VGG == '5') :
-   filePath = '/storage/users/mawbyi1/Ivysaurus/files/gaussian/my_model_calo_VGG_INV'
+filePath = '/storage/users/mawbyi1/Ivysaurus/files/gaussian/my_model_calo_VGG_BN_VARS'
 
 # checkpoint
 checkpoint = ModelCheckpoint(filePath, monitor='val_accuracy', verbose=1, save_best_only=True, mode='max')
@@ -228,8 +207,8 @@ reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=2, min_lr
 
 callbacks_list = [checkpoint, reduce_lr]
 
-history = ivysaurusCalo.fit([startGridU_calo_train, endGridU_calo_train, startGridV_calo_train, endGridV_calo_train, startGridW_calo_train, endGridW_calo_train], y_train, 
-    batch_size = batchSize, validation_data=([startGridU_calo_test, endGridU_calo_test, startGridV_calo_test, endGridV_calo_test, startGridW_calo_test, endGridW_calo_test], y_test), 
+history = ivysaurusCalo.fit([startGridU_calo_train, endGridU_calo_train, startGridV_calo_train, endGridV_calo_train, startGridW_calo_train, endGridW_calo_train, trackVars_train, showerVars_train], y_train, 
+    batch_size = batchSize, validation_data=([startGridU_calo_test, endGridU_calo_test, startGridV_calo_test, endGridV_calo_test, startGridW_calo_test, endGridW_calo_test, trackVars_test, showerVars_test], y_test), 
     shuffle=True, epochs=nEpochs, class_weight=classWeights, callbacks=callbacks_list, verbose=2)
 
 ###########################################################

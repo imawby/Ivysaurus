@@ -2,7 +2,7 @@ from tensorflow.keras import Model, Input
 from tensorflow.keras.layers import Concatenate, Dense, Dropout, Conv2D, MaxPooling2D, Flatten, add
 
 # start/endGrid.shape = (n, dimensions, dimensions, 1)
-def IvysaurusIChooseYou(dimensions, nclasses, nTrackVars, nShowerVars):
+def IvysaurusIChooseYou(dimensions, nclasses):
     
     ################################
     # U View
@@ -31,18 +31,6 @@ def IvysaurusIChooseYou(dimensions, nclasses, nTrackVars, nShowerVars):
     combined = Concatenate()([branchU, branchV, branchW])
         
     ################################
-    # Now add in the trackVars
-    ################################
-    trackVarsInputs = Input(shape=(nTrackVars,))
-    combined = Concatenate()([combined, trackVarsInputs])
-
-    ################################
-    # Now add in the showerVars
-    ################################
-    showerVarsInputs = Input(shape=(nShowerVars,))
-    combined = Concatenate()([combined, showerVarsInputs])
-    
-    ################################
     # FC layers
     ################################
     combined = Dense(4096, activation="relu")(combined)
@@ -54,8 +42,11 @@ def IvysaurusIChooseYou(dimensions, nclasses, nTrackVars, nShowerVars):
     # Now classify the image
     ################################
     outputs = Dense(nclasses, activation="softmax")(combined)
-    
-    model = Model(inputs=[startInputsU, endInputsU, startInputsV, endInputsV, startInputsW, endInputsW, trackVarsInputs, showerVarsInputs], outputs=outputs)
+
+    ################################
+    # Define model
+    ################################        
+    model = Model(inputs=[startInputsU, endInputsU, startInputsV, endInputsV, startInputsW, endInputsW], outputs=outputs)
     
     return model
 

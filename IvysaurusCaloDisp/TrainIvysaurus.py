@@ -55,7 +55,7 @@ if (nModels == 0) :
     exit()
         
 nTrackVars = 10 # nTrackChildren, nShowerChildren, nGrandChildren, nChildHits, childEnergy, childTrackScore, trackLength, trackWobble, trackScore, momComparison
-nShowerVars = 3 # displacement, dca, trackStubLength
+nShowerVars = 16 # displacement, dca, trackStubLength
 
 if (not useTrackVars) :
     nTrackVars = 0
@@ -63,7 +63,7 @@ if (not useTrackVars) :
 if (not useShowerVars) :
     nShowerVars = 0
 
-nVars = nModels + nTrackVars + nShowerVars
+nVars = (nModels * 5) + nTrackVars + nShowerVars
 
 dimensions = 24
 nClasses = 5
@@ -300,20 +300,20 @@ if (useDispModel) :
 # Prep model input
 
 if (useCaloModel) :
-    combinedVars_train = ivysaurusScores_calo_train.argmax(axis=1).reshape(-1,1)
-    combinedVars_test = ivysaurusScores_calo_test.argmax(axis=1).reshape(-1,1)
+    combinedVars_train = ivysaurusScores_calo_train
+    combinedVars_test = ivysaurusScores_calo_test
 
     if (useDispModel) :
-        combinedVars_train = np.concatenate((combinedVars_train, ivysaurusScores_disp_train.argmax(axis=1).reshape(-1,1)), axis=1)
-        combinedVars_test = np.concatenate((combinedVars_test, ivysaurusScores_disp_test.argmax(axis=1).reshape(-1,1)), axis=1)
+        combinedVars_train = np.concatenate((combinedVars_train, ivysaurusScores_disp_train), axis=1)
+        combinedVars_test = np.concatenate((combinedVars_test, ivysaurusScores_disp_test), axis=1)
 
 elif (useDispModel) :
-    combinedVars_train = ivysaurusScores_disp_train.argmax(axis=1).reshape(-1,1)
-    combinedVars_test = ivysaurusScores_disp_test.argmax(axis=1).reshape(-1,1)
+    combinedVars_train = ivysaurusScores_disp_train
+    combinedVars_test = ivysaurusScores_disp_test
 
     if (useCaloModel) :
-        combinedVars_train = np.concatenate((combinedVars_train, ivysaurusScores_calo_train.argmax(axis=1).reshape(-1,1)), axis=1)
-        combinedVars_test = np.concatenate((combinedVars_test, ivysaurusScores_calo_test.argmax(axis=1).reshape(-1,1)), axis=1)
+        combinedVars_train = np.concatenate((combinedVars_train, ivysaurusScores_calo_train), axis=1)
+        combinedVars_test = np.concatenate((combinedVars_test, ivysaurusScores_calo_test), axis=1)
 
 
 if (useTrackVars) :
@@ -341,7 +341,7 @@ with mirrored_strategy.scope():
 ###########################################################
 # Create class weights
 
-indexVector = np.argmax(y_test, axis=1)
+indexVector = np.argmax(y_train, axis=1)
 
 # muons = 0, protons = 1, pions = 2, electrons = 3, photons = 4, other = 5
 nMuons = np.count_nonzero(indexVector == 0)    
@@ -362,8 +362,13 @@ print(classWeights)
 
 # Fit that model!
 
-filePath = '/storage/users/mawbyi1/Ivysaurus/files/gaussian/my_model_combined_VGG'
-
+if (useCaloModel and useDispModel) :
+    filePath = '/storage/users/mawbyi1/Ivysaurus/files/gaussian/my_model_combined_VGG'
+elif (useCaloModel) :
+    filePath = '/storage/users/mawbyi1/Ivysaurus/files/gaussian/my_model_combined_caloNoDisp_VGG'
+elif (useDispModel) :
+    filePath = '/storage/users/mawbyi1/Ivysaurus/files/gaussian/my_model_combined_dispNoCalo_VGG'
+    
 # checkpoint
 checkpoint = ModelCheckpoint(filePath, monitor='val_accuracy', verbose=1, save_best_only=True, mode='max')
 

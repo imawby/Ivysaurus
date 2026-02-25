@@ -48,10 +48,25 @@ def readTree(fileNames, dimensions, nClasses) :
     showerVarsSuccessful = []
     displacement = []
     dca = []
-    trackStubLength = []
-    nuVertexAvSeparation = []
-    nuVertexChargeAsymmetry = []
-
+    
+    ###################################
+    # PhD variables...
+    ###################################    
+    showerInitialGapSize = []
+    showerLargestGapSize = []
+    showerPathwayLength = []
+    showerPathwayScatteringAngle2D = []
+    showerNHits = []
+    showerFoundHitRatio = []
+    showerScatterAngle = []
+    showerOpeningAngle = []
+    showerNuVertexEnergyAsymmetry = []
+    showerNuVertexEnergyWeightedMeanRadialDistance = []
+    showerStartEnergyAsymmetry = []
+    showerStartMoliereRadius = []
+    showerNAmbiguousViews = []
+    showerUnaccountedEnergy = []
+    
     nEntries = 0
     
     for fileName in fileNames :
@@ -88,13 +103,25 @@ def readTree(fileNames, dimensions, nClasses) :
         trackWobble.extend(branches['TrackWobble'])
         trackScore.extend(branches['TrackScore'])
         momComparison.extend(branches['TrackMomComparison'])
-        
+
         showerVarsSuccessful.extend(branches['ShowerVarsSuccessful'])
         displacement.extend(branches['ShowerDisplacement'])
         dca.extend(branches['ShowerDCA'])
-        trackStubLength.extend(branches['ShowerTrackStubLength'])
-        nuVertexAvSeparation.extend(branches['ShowerNuVertexAvSeparation'])
-        nuVertexChargeAsymmetry.extend(branches['ShowerNuVertexChargeAsymmetry'])
+        
+        showerInitialGapSize.extend(branches['ShowerInitialGapSize'])
+        showerLargestGapSize.extend(branches['ShowerLargestGapSize'])
+        showerPathwayLength.extend(branches['ShowerPathwayLength'])
+        showerPathwayScatteringAngle2D.extend(branches['ShowerPathwayScatteringAngle2D'])
+        showerNHits.extend(branches['ShowerNHits'])
+        showerFoundHitRatio.extend(branches['ShowerFoundHitRatio'])
+        showerScatterAngle.extend(branches['ShowerScatterAngle'])
+        showerOpeningAngle.extend(branches['ShowerOpeningAngle'])
+        showerNuVertexEnergyAsymmetry.extend(branches['ShowerNuVertexEnergyAsymmetry'])
+        showerNuVertexEnergyWeightedMeanRadialDistance.extend(branches['ShowerNuVertexEnergyWeightedMeanRadialDistance'])
+        showerStartEnergyAsymmetry.extend(branches['ShowerStartEnergyAsymmetry'])
+        showerStartMoliereRadius.extend(branches['ShowerStartMoliereRadius'])
+        showerNAmbiguousViews.extend(branches['ShowerNAmbiguousViews'])
+        showerUnaccountedEnergy.extend(branches['ShowerUnaccountedEnergy'])
         
         particlePDG.extend(branches['TruePDG'])
         
@@ -130,9 +157,21 @@ def readTree(fileNames, dimensions, nClasses) :
     
     displacement = np.array(displacement)
     dca = np.array(dca)
-    trackStubLength = np.array(trackStubLength)
-    nuVertexAvSeparation = np.array(nuVertexAvSeparation)
-    nuVertexChargeAsymmetry = np.array(nuVertexChargeAsymmetry)
+    
+    showerInitialGapSize = np.array(showerInitialGapSize)
+    showerLargestGapSize= np.array(showerLargestGapSize)
+    showerPathwayLength = np.array(showerPathwayLength)
+    showerPathwayScatteringAngle2D = np.array(showerPathwayScatteringAngle2D)
+    showerNHits = np.array(showerNHits)
+    showerFoundHitRatio = np.array(showerFoundHitRatio)
+    showerScatterAngle = np.array(showerScatterAngle)
+    showerOpeningAngle = np.array(showerOpeningAngle)
+    showerNuVertexEnergyAsymmetry = np.array(showerNuVertexEnergyAsymmetry)
+    showerNuVertexEnergyWeightedMeanRadialDistance = np.array(showerNuVertexEnergyWeightedMeanRadialDistance)
+    showerStartEnergyAsymmetry = np.array(showerStartEnergyAsymmetry)
+    showerStartMoliereRadius = np.array(showerStartMoliereRadius)
+    showerNAmbiguousViews = np.array(showerNAmbiguousViews)
+    showerUnaccountedEnergy = np.array(showerUnaccountedEnergy)
     
     particlePDG = np.array(particlePDG)
     
@@ -166,9 +205,21 @@ def readTree(fileNames, dimensions, nClasses) :
     
     displacement = displacement.reshape((nEntries, 1))
     dca = dca.reshape((nEntries, 1))
-    trackStubLength = trackStubLength.reshape((nEntries, 1))
-    nuVertexAvSeparation = nuVertexAvSeparation.reshape((nEntries, 1))
-    nuVertexChargeAsymmetry = nuVertexChargeAsymmetry.reshape((nEntries, 1))
+   
+    showerInitialGapSize = showerInitialGapSize.reshape((nEntries, 1))
+    showerLargestGapSize= showerLargestGapSize.reshape((nEntries, 1))
+    showerPathwayLength = showerPathwayLength.reshape((nEntries, 1))
+    showerPathwayScatteringAngle2D = showerPathwayScatteringAngle2D.reshape((nEntries, 1))
+    showerNHits = showerNHits.reshape((nEntries, 1))
+    showerFoundHitRatio = showerFoundHitRatio.reshape((nEntries, 1))
+    showerScatterAngle = showerScatterAngle.reshape((nEntries, 1))
+    showerOpeningAngle = showerOpeningAngle.reshape((nEntries, 1))
+    showerNuVertexEnergyAsymmetry = showerNuVertexEnergyAsymmetry.reshape((nEntries, 1))
+    showerNuVertexEnergyWeightedMeanRadialDistance = showerNuVertexEnergyWeightedMeanRadialDistance.reshape((nEntries, 1))
+    showerStartEnergyAsymmetry = showerStartEnergyAsymmetry.reshape((nEntries, 1))
+    showerStartMoliereRadius = showerStartMoliereRadius.reshape((nEntries, 1))
+    showerNAmbiguousViews = showerNAmbiguousViews.reshape((nEntries, 1))
+    showerUnaccountedEnergy = showerUnaccountedEnergy.reshape((nEntries, 1))
     
     particlePDG = particlePDG.reshape((nEntries, 1))
     
@@ -272,8 +323,8 @@ def readTree(fileNames, dimensions, nClasses) :
     # Concatenate
     ###################################          
     trackVars = np.concatenate((nTrackChildren, nShowerChildren, nGrandChildren, nChildHits, childEnergy, childTrackScore, trackLength, trackWobble, trackScore, momComparison), axis=1)
-    showerVars = np.concatenate((displacement, dca, trackStubLength), axis=1)
-
+    showerVars = np.concatenate((displacement, dca, showerInitialGapSize, showerLargestGapSize, showerPathwayLength, showerPathwayScatteringAngle2D, showerNHits, showerFoundHitRatio, showerScatterAngle, showerOpeningAngle, showerNuVertexEnergyAsymmetry, showerNuVertexEnergyWeightedMeanRadialDistance, showerStartEnergyAsymmetry, showerStartMoliereRadius, showerNAmbiguousViews, showerUnaccountedEnergy), axis=1)    
+    
     ###################################
     # PDG counts
     ################################### 

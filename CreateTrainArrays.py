@@ -5,6 +5,7 @@ import math
 import glob
 import sys
 import FileHelper
+import sklearn
 
 print('555')
 
@@ -19,26 +20,21 @@ nClasses = 5
 
 # Here we'll get our information...
 
-import sys
-print("Let's read the arguments from command line")
-print(sys.argv)
-print("sys.argv[1]: ", sys.argv[1])
 
-fileNames = glob.glob('/storage/hpc/30/mawbyi1/Ivysaurus/files/grid24/*/' + sys.argv[1] + '.root')
-#fileNames.extend(glob.glob('/storage/hpc/30/mawbyi1/Ivysaurus/files/grid24/nue/*'))
-#fileNames.extend(glob.glob('/storage/hpc/30/mawbyi1/Ivysaurus/files/grid24/nutau/*'))
-trainVarFile = '/storage/hpc/30/mawbyi1/Ivysaurus/files/grid24/' + sys.argv[1] + '.npz'
+#fileNames = glob.glob('/storage/hpc/30/mawbyi1/Ivysaurus/files/grid24/*/' + sys.argv[1] + '.root')
+fileNames = ['/Users/isobel/Desktop/DUNE/2024/Ivysaurus/files/revive/filtered_nu_0.root']
+trainVarFile = '/Users/isobel/Desktop/DUNE/2024/Ivysaurus/files/revive/filtered_nu_0.npz'
 print(fileNames)
 
 ###########################################################
 
 # Read tree
-nEntries, startGridU, startGridV, startGridW, endGridU, endGridV, endGridW, trackVars, showerVars, y = FileHelper.readTree(fileNames, dimensions, nClasses)
+nEntries, startGridU, startGridV, startGridW, endGridU, endGridV, endGridW, pfpVars, trackVars, showerVars, y = FileHelper.readTree(fileNames, dimensions, nClasses)
 
 ###########################################################
 
 # This should shuffle things so that the indicies are still linked
-startGridU, startGridV, startGridW, endGridU, endGridV, endGridW, trackVars, showerVars, y = sklearn.utils.shuffle(startGridU, startGridV, startGridW, endGridU, endGridV, endGridW, trackVars, showerVars, y)
+startGridU, startGridV, startGridW, endGridU, endGridV, endGridW, pfpVars, trackVars, showerVars, y = sklearn.utils.shuffle(startGridU, startGridV, startGridW, endGridU, endGridV, endGridW, pfpVars, trackVars, showerVars, y)
 
 ###########################################################
 

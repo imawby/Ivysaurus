@@ -73,7 +73,7 @@ print('MODE_VGG: ', MODE_VGG)
 dimensions = 24
 nClasses = 5
 
-nTrackVars = 10 # nTrackChildren, nShowerChildren, nGrandChildren, nChildHits, childEnergy, childTrackScore, trackLength, trackWobble, trackScore, momComparison
+nTrackVars = 11 #  nHits2D, nTrackChildren, nShowerChildren, nGrandChildren, nChildHits, childEnergy, childTrackScore, trackLength, trackWobble, trackScore, momComparison
 nShowerVars = 3 # displacement, dca, trackStubLength
 
 nEpochs = 10

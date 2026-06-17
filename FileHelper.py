@@ -4,7 +4,7 @@ import uproot
 from tensorflow.keras.utils import to_categorical
 
 
-def readTree(fileNames, dimensions, nClasses) :
+def readTree(fileNames, dimensions) :
 
     ###################################
     # Grid lists
@@ -141,39 +141,39 @@ def readTree(fileNames, dimensions, nClasses) :
     endGridV[endGridV_valid] = np.log1p(endGridV[endGridV_valid])
     endGridW[endGridW_valid] = np.log1p(endGridW[endGridW_valid])
     
-    print('--------------------------------------------------')
-    print(f'startGridU mean: {round(float(np.mean(startGridU[startGridU_valid])), 4)}')
-    print(f'startGridU std: {round(float(np.std(startGridU[startGridU_valid])), 4)}')    
-    print('--------------------------------------------------')
-    print(f'startGridV mean: {round(float(np.mean(startGridV[startGridV_valid])), 4)}')
-    print(f'startGridV std: {round(float(np.std(startGridV[startGridV_valid])), 4)}')    
-    print('--------------------------------------------------')
-    print(f'startGridW mean: {round(float(np.mean(startGridW[startGridW_valid])), 4)}')
-    print(f'startGridW std: {round(float(np.std(startGridW[startGridW_valid])), 4)}')    
-    print('--------------------------------------------------')
-    print(f'endGridU mean: {round(float(np.mean(endGridU[endGridU_valid])), 4)}')
-    print(f'endGridU std: {round(float(np.std(endGridU[endGridU_valid])), 4)}')    
-    print('--------------------------------------------------')
-    print(f'endGridV mean: {round(float(np.mean(endGridV[endGridV_valid])), 4)}')
-    print(f'endGridV std: {round(float(np.std(endGridV[endGridV_valid])), 4)}')    
-    print('--------------------------------------------------')
-    print(f'endGridW mean: {round(float(np.mean(endGridW[endGridW_valid])), 4)}')
-    print(f'endGridW std: {round(float(np.std(endGridW[endGridW_valid])), 4)}')    
-    print('--------------------------------------------------')    
+    # print('--------------------------------------------------')
+    # print(f'startGridU mean: {round(float(np.mean(startGridU[startGridU_valid])), 4)}')
+    # print(f'startGridU std: {round(float(np.std(startGridU[startGridU_valid])), 4)}')    
+    # print('--------------------------------------------------')
+    # print(f'startGridV mean: {round(float(np.mean(startGridV[startGridV_valid])), 4)}')
+    # print(f'startGridV std: {round(float(np.std(startGridV[startGridV_valid])), 4)}')    
+    # print('--------------------------------------------------')
+    # print(f'startGridW mean: {round(float(np.mean(startGridW[startGridW_valid])), 4)}')
+    # print(f'startGridW std: {round(float(np.std(startGridW[startGridW_valid])), 4)}')    
+    # print('--------------------------------------------------')
+    # print(f'endGridU mean: {round(float(np.mean(endGridU[endGridU_valid])), 4)}')
+    # print(f'endGridU std: {round(float(np.std(endGridU[endGridU_valid])), 4)}')    
+    # print('--------------------------------------------------')
+    # print(f'endGridV mean: {round(float(np.mean(endGridV[endGridV_valid])), 4)}')
+    # print(f'endGridV std: {round(float(np.std(endGridV[endGridV_valid])), 4)}')    
+    # print('--------------------------------------------------')
+    # print(f'endGridW mean: {round(float(np.mean(endGridW[endGridW_valid])), 4)}')
+    # print(f'endGridW std: {round(float(np.std(endGridW[endGridW_valid])), 4)}')    
+    # print('--------------------------------------------------')    
 
     # normalise them
-    startGridU_mean = 0.0
-    startGridU_std = 1.0
-    startGridV_mean = 0.0
-    startGridV_std = 1.0
-    startGridW_mean = 0.0
-    startGridW_std = 1.0
-    endGridU_mean = 0.0
-    endGridU_std = 1.0
-    endGridV_mean = 0.0
-    endGridV_std = 1.0
-    endGridW_mean = 0.0
-    endGridW_std = 1.0     
+    startGridU_mean = 0.0768
+    startGridU_std = 0.0955
+    startGridV_mean = 0.0772
+    startGridV_std = 0.0964
+    startGridW_mean = 0.089
+    startGridW_std = 0.1087
+    endGridU_mean = 0.0703
+    endGridU_std = 0.0935
+    endGridV_mean = 0.0714
+    endGridV_std = 0.0949
+    endGridW_mean = 0.0809
+    endGridW_std = 0.1084
 
     startGridU[startGridU_valid] = (startGridU[startGridU_valid] - startGridU_mean) / startGridU_std
     startGridV[startGridV_valid] = (startGridV[startGridV_valid] - startGridV_mean) / startGridV_std
@@ -185,14 +185,14 @@ def readTree(fileNames, dimensions, nClasses) :
     ###################################
     # PFP vars
     ###################################
-    print('--------------------------------------------------')
-    print(f'nHits2D mean: {round(float(np.mean(nHits2D)), 4)}')
-    print(f'nHits2D std: {round(float(np.std(nHits2D)), 4)}')
-    print('--------------------------------------------------')
+    # print('--------------------------------------------------')
+    # print(f'nHits2D mean: {round(float(np.mean(nHits2D)), 4)}')
+    # print(f'nHits2D std: {round(float(np.std(nHits2D)), 4)}')
+    # print('--------------------------------------------------')
 
-    nHits2D_mean = 0.0
-    nHits2D_std = 1.0
-    nHits2D[nHits2D_valid] = (nHits2D[nHits2D_valid] - nHits2D_mean) / nHits2D_std
+    nHits2D_mean = 818.53
+    nHits2D_std = 1406.8101
+    nHits2D[nHits2D] = (nHits2D[nHits2D] - nHits2D_mean) / nHits2D_std
     
     ###################################
     # Track vars (invalid = -1)
@@ -208,69 +208,69 @@ def readTree(fileNames, dimensions, nClasses) :
     trackScore_valid = trackScore > -0.5
     momComparison_valid = momComparison > -0.5
     
-    print('--------------------------------------------------')
-    print(f'nTrackChildren mean: {round(float(np.mean(nTrackChildren[nTrackChildren_valid])), 4)}')
-    print(f'nTrackChildren std: {round(float(np.std(nTrackChildren[nTrackChildren_valid])), 4)}')
-    print('--------------------------------------------------')
-    print(f'nShowerChildren mean: {round(float(np.mean(nShowerChildren[nShowerChildren_valid])), 4)}')
-    print(f'nShowerChildren std: {round(float(np.std(nShowerChildren[nShowerChildren_valid])), 4)}')
-    print('--------------------------------------------------')
-    print(f'nGrandChildren mean: {round(float(np.mean(nGrandChildren[nGrandChildren_valid])), 4)}')
-    print(f'nGrandChildren std: {round(float(np.std(nGrandChildren[nGrandChildren_valid])), 4)}')
-    print('--------------------------------------------------')
-    print(f'nChildHits mean: {round(float(np.mean(nChildHits[nChildHits_valid])), 4)}')
-    print(f'nChildHits std: {round(float(np.std(nChildHits[nChildHits_valid])), 4)}')
-    print('--------------------------------------------------')
-    print(f'childEnergy mean: {round(float(np.mean(childEnergy[childEnergy_valid])), 4)}')
-    print(f'childEnergy std: {round(float(np.std(childEnergy[childEnergy_valid])), 4)}')
-    print('--------------------------------------------------')
-    print(f'childTrackScore mean: {round(float(np.mean(childTrackScore[childTrackScore_valid])), 4)}')
-    print(f'childTrackScore std: {round(float(np.std(childTrackScore[childTrackScore_valid])), 4)}')
-    print('--------------------------------------------------')
-    print(f'trackLength mean: {round(float(np.mean(trackLength[trackLength_valid])), 4)}')
-    print(f'trackLength std: {round(float(np.std(trackLength[trackLength_valid])), 4)}')
-    print('--------------------------------------------------')
-    print(f'trackWobble mean: {round(float(np.mean(trackWobble[trackWobble_valid])), 4)}')
-    print(f'trackWobble std: {round(float(np.std(trackWobble[trackWobble_valid])), 4)}')
-    print('--------------------------------------------------')
-    print(f'trackScore mean: {round(float(np.mean(trackScore[trackScore_valid])), 4)}')
-    print(f'trackScore std: {round(float(np.std(trackScore[trackScore_valid])), 4)}')
-    print('--------------------------------------------------')
-    print(f'momComparison mean: {round(float(np.mean(momComparison[momComparison_valid])), 4)}')
-    print(f'momComparison std: {round(float(np.std(momComparison[momComparison_valid])), 4)}')
-    print('--------------------------------------------------')
+    # print('--------------------------------------------------')
+    # print(f'nTrackChildren mean: {round(float(np.mean(nTrackChildren[nTrackChildren_valid])), 4)}')
+    # print(f'nTrackChildren std: {round(float(np.std(nTrackChildren[nTrackChildren_valid])), 4)}')
+    # print('--------------------------------------------------')
+    # print(f'nShowerChildren mean: {round(float(np.mean(nShowerChildren[nShowerChildren_valid])), 4)}')
+    # print(f'nShowerChildren std: {round(float(np.std(nShowerChildren[nShowerChildren_valid])), 4)}')
+    # print('--------------------------------------------------')
+    # print(f'nGrandChildren mean: {round(float(np.mean(nGrandChildren[nGrandChildren_valid])), 4)}')
+    # print(f'nGrandChildren std: {round(float(np.std(nGrandChildren[nGrandChildren_valid])), 4)}')
+    # print('--------------------------------------------------')
+    # print(f'nChildHits mean: {round(float(np.mean(nChildHits[nChildHits_valid])), 4)}')
+    # print(f'nChildHits std: {round(float(np.std(nChildHits[nChildHits_valid])), 4)}')
+    # print('--------------------------------------------------')
+    # print(f'childEnergy mean: {round(float(np.mean(childEnergy[childEnergy_valid])), 4)}')
+    # print(f'childEnergy std: {round(float(np.std(childEnergy[childEnergy_valid])), 4)}')
+    # print('--------------------------------------------------')
+    # print(f'childTrackScore mean: {round(float(np.mean(childTrackScore[childTrackScore_valid])), 4)}')
+    # print(f'childTrackScore std: {round(float(np.std(childTrackScore[childTrackScore_valid])), 4)}')
+    # print('--------------------------------------------------')
+    # print(f'trackLength mean: {round(float(np.mean(trackLength[trackLength_valid])), 4)}')
+    # print(f'trackLength std: {round(float(np.std(trackLength[trackLength_valid])), 4)}')
+    # print('--------------------------------------------------')
+    # print(f'trackWobble mean: {round(float(np.mean(trackWobble[trackWobble_valid])), 4)}')
+    # print(f'trackWobble std: {round(float(np.std(trackWobble[trackWobble_valid])), 4)}')
+    # print('--------------------------------------------------')
+    # print(f'trackScore mean: {round(float(np.mean(trackScore[trackScore_valid])), 4)}')
+    # print(f'trackScore std: {round(float(np.std(trackScore[trackScore_valid])), 4)}')
+    # print('--------------------------------------------------')
+    # print(f'momComparison mean: {round(float(np.mean(momComparison[momComparison_valid])), 4)}')
+    # print(f'momComparison std: {round(float(np.std(momComparison[momComparison_valid])), 4)}')
+    # print('--------------------------------------------------')
 
-    nTrackChildren_mean = 0.0
-    nTrackChildren_std = 1.0
-    nShowerChildren_mean = 0.0
-    nShowerChildren_std = 1.0
-    nGrandChildren_mean = 0.0
-    nGrandChildren_std = 1.0
-    nChildHits_mean = 0.0
-    nChildHits_std = 1.0
-    childEnergy_mean = 0.0
-    childEnergy_std = 1.0
-    childTrackScore_mean = 0.0
-    childTrackScore_std = 1.0
-    trackLength_mean = 0.0
-    trackLength_std = 1.0
-    trackWobble_mean = 0.0
-    trackWobble_std = 1.0
-    trackScore_mean = 0.0
-    trackScore_std = 1.0
-    momComparison_mean = 0.0
-    momComparison_std = 1.0
-
-    nTrackChildren_valid = ([nTrackChildren_valid] - nTrackChildren_mean) / nTrackChildren_std
-    nShowerChildren_valid = ([nShowerChildren_valid] - nShowerChildren_mean) / nShowerChildren_std
-    nGrandChildren_valid = ([nGrandChildren_valid] - nGrandChildren_mean) / nGrandChildren_std
-    nChildHits_valid = ([nChildHits_valid] - nChildHits_mean) / nChildHits_std
-    childEnergy_valid = ([childEnergy_valid] - childEnergy_mean) / childEnergy_std
-    childTrackScore_valid = ([childTrackScore_valid] - childTrackScore_mean) / childTrackScore_std
-    trackLength_valid = ([trackLength_valid] - trackLength_mean) / trackLength_std
-    trackWobble_valid = ([trackWobble_valid] - trackWobble_mean) / trackWobble_std
-    trackScore_valid = ([trackScore_valid] - trackScore_mean) / trackScore_std
-    momComparison_valid = ([momComparison_valid] - momComparison_mean) / momComparison_std
+    nTrackChildren_mean = 0.1309
+    nTrackChildren_std = 0.3938
+    nShowerChildren_mean = 0.0466
+    nShowerChildren_std = 0.2163
+    nGrandChildren_mean = 0.023
+    nGrandChildren_std = 0.1787
+    nChildHits_mean = 205.8004
+    nChildHits_std = 438.8792
+    childEnergy_mean = 0.32
+    childEnergy_std = 0.3568
+    childTrackScore_mean = 0.7307
+    childTrackScore_std = 0.1003
+    trackLength_mean = 258.3441
+    trackLength_std = 1426.0234
+    trackWobble_mean = 6.7975
+    trackWobble_std = 4.4681
+    trackScore_mean = 0.5998
+    trackScore_std = 0.1783
+    momComparison_mean = 3.8436
+    momComparison_std = 3.1121
+ 
+    nTrackChildren[nTrackChildren_valid] = (nTrackChildren[nTrackChildren_valid] - nTrackChildren_mean) / nTrackChildren_std
+    nShowerChildren[nShowerChildren_valid] = (nShowerChildren[nShowerChildren_valid] - nShowerChildren_mean) / nShowerChildren_std
+    nGrandChildren[nGrandChildren_valid] = (nGrandChildren[nGrandChildren_valid] - nGrandChildren_mean) / nGrandChildren_std
+    nChildHits[nChildHits_valid] = (nChildHits[nChildHits_valid] - nChildHits_mean) / nChildHits_std
+    childEnergy[childEnergy_valid] = (childEnergy[childEnergy_valid] - childEnergy_mean) / childEnergy_std
+    childTrackScore[childTrackScore_valid] = (childTrackScore[childTrackScore_valid] - childTrackScore_mean) / childTrackScore_std
+    trackLength[trackLength_valid] = (trackLength[trackLength_valid] - trackLength_mean) / trackLength_std
+    trackWobble[trackWobble_valid] = (trackWobble[trackWobble_valid] - trackWobble_mean) / trackWobble_std
+    trackScore[trackScore_valid] = (trackScore[trackScore_valid] - trackScore_mean) / trackScore_std
+    momComparison[momComparison_valid] = (momComparison[momComparison_valid] - momComparison_mean) / momComparison_std
     
     ###################################
     # Shower vars
@@ -281,38 +281,38 @@ def readTree(fileNames, dimensions, nClasses) :
     nuVertexAvSeparation_valid = nuVertexAvSeparation > -0.5
     nuVertexChargeAsymmetry_valid = nuVertexChargeAsymmetry > -0.5
     
-    print(f'displacement mean: {round(float(np.mean(displacement[displacement_valid])), 4)}')
-    print(f'displacement std: {round(float(np.std(displacement[displacement_valid])), 4)}')
-    print('--------------------------------------------------')
-    print(f'dca mean: {round(float(np.mean(dca[dca_valid])), 4)}')
-    print(f'dca std: {round(float(np.std(dca[dca_valid])), 4)}')
-    print('--------------------------------------------------')
-    print(f'trackStubLength mean: {round(float(np.mean(trackStubLength[trackStubLength_valid])), 4)}')
-    print(f'trackStubLength std: {round(float(np.std(trackStubLength[trackStubLength_valid])), 4)}')
-    print('--------------------------------------------------')
-    print(f'nuVertexAvSeparation mean: {round(float(np.mean(nuVertexAvSeparation[nuVertexAvSeparation_valid])), 4)}')
-    print(f'nuVertexAvSeparation std: {round(float(np.std(nuVertexAvSeparation[nuVertexAvSeparation_valid])), 4)}')
-    print('--------------------------------------------------')
-    print(f'nuVertexChargeAsymmetry mean: {round(float(np.mean(nuVertexChargeAsymmetry[nuVertexChargeAsymmetry_valid])), 4)}')
-    print(f'nuVertexChargeAsymmetry std: {round(float(np.std(nuVertexChargeAsymmetry[nuVertexChargeAsymmetry_valid])), 4)}')
-    print('--------------------------------------------------')
+    # print(f'displacement mean: {round(float(np.mean(displacement[displacement_valid])), 4)}')
+    # print(f'displacement std: {round(float(np.std(displacement[displacement_valid])), 4)}')
+    # print('--------------------------------------------------')
+    # print(f'dca mean: {round(float(np.mean(dca[dca_valid])), 4)}')
+    # print(f'dca std: {round(float(np.std(dca[dca_valid])), 4)}')
+    # print('--------------------------------------------------')
+    # print(f'trackStubLength mean: {round(float(np.mean(trackStubLength[trackStubLength_valid])), 4)}')
+    # print(f'trackStubLength std: {round(float(np.std(trackStubLength[trackStubLength_valid])), 4)}')
+    # print('--------------------------------------------------')
+    # print(f'nuVertexAvSeparation mean: {round(float(np.mean(nuVertexAvSeparation[nuVertexAvSeparation_valid])), 4)}')
+    # print(f'nuVertexAvSeparation std: {round(float(np.std(nuVertexAvSeparation[nuVertexAvSeparation_valid])), 4)}')
+    # print('--------------------------------------------------')
+    # print(f'nuVertexChargeAsymmetry mean: {round(float(np.mean(nuVertexChargeAsymmetry[nuVertexChargeAsymmetry_valid])), 4)}')
+    # print(f'nuVertexChargeAsymmetry std: {round(float(np.std(nuVertexChargeAsymmetry[nuVertexChargeAsymmetry_valid])), 4)}')
+    # print('--------------------------------------------------')
 
-    displacement_mean = 0.0
-    displacement_std = 1.0
-    dca_mean = 0.0
-    dca_std = 1.0
-    trackStubLength_mean = 0.0
-    trackStubLength_std = 1.0
-    nuVertexAvSeparation_mean = 0.0
-    nuVertexAvSeparation_std = 1.0
-    nuVertexChargeAsymmetry_mean = 0.0
-    nuVertexChargeAsymmetry_std = 1.0
+    displacement_mean = 35.9138
+    displacement_std = 78.6049
+    dca_mean = 19.5538
+    dca_std = 53.3346
+    trackStubLength_mean = 47.3008
+    trackStubLength_std = 63.3723
+    nuVertexAvSeparation_mean = 19.8212
+    nuVertexAvSeparation_std = 20.6977
+    nuVertexChargeAsymmetry_mean = 0.8874
+    nuVertexChargeAsymmetry_std = 0.1908
 
-    displacement_valid = ([displacement_valid] - displacement_mean) / displacement_std
-    dca_valid = ([dca_valid] - dca_mean) / dca_std
-    trackStubLength_valid = ([trackStubLength_valid] - trackStubLength_mean) / trackStubLength_std
-    nuVertexAvSeparation_valid = ([nuVertexAvSeparation_valid] - nuVertexAvSeparation_mean) / nuVertexAvSeparation_std
-    nuVertexChargeAsymmetry_valid = ([nuVertexChargeAsymmetry_valid] - nuVertexChargeAsymmetry_mean) / nuVertexChargeAsymmetry_std
+    displacement[displacement_valid] = (displacement[displacement_valid] - displacement_mean) / displacement_std
+    dca[dca_valid] = (dca[dca_valid] - dca_mean) / dca_std
+    trackStubLength[trackStubLength_valid] = (trackStubLength[trackStubLength_valid] - trackStubLength_mean) / trackStubLength_std
+    nuVertexAvSeparation[nuVertexAvSeparation_valid] = (nuVertexAvSeparation[nuVertexAvSeparation_valid] - nuVertexAvSeparation_mean) / nuVertexAvSeparation_std
+    nuVertexChargeAsymmetry[nuVertexChargeAsymmetry_valid] = (nuVertexChargeAsymmetry[nuVertexChargeAsymmetry_valid] - nuVertexChargeAsymmetry_mean) / nuVertexChargeAsymmetry_std
 
     ###################################
     # Turn valid to floats
@@ -402,7 +402,7 @@ def readTree(fileNames, dimensions, nClasses) :
     ###################################
     # Concatenate
     ###################################
-    pfpVars = np.concatenate((nHits2D, endX, endY, endZ), axis=1)
+    pfpVars = np.concatenate((endX, endY, endZ), axis=1)
     trackVars = np.concatenate((nTrackChildren, nTrackChildren_valid,
                                 nShowerChildren, nShowerChildren_valid,
                                 nGrandChildren, nGrandChildren_valid,
@@ -412,10 +412,12 @@ def readTree(fileNames, dimensions, nClasses) :
                                 trackLength, trackLength_valid,
                                 trackWobble, trackWobble_valid,
                                 trackScore, trackScore_valid,
-                                momComparison, momComparison_valid), axis=1)
+                                momComparison, momComparison_valid, nHits2D), axis=1)
     showerVars = np.concatenate((displacement, displacement_valid,
                                  dca, dca_valid,
-                                 trackStubLength, trackStubLength_valid), axis=1)
+                                 trackStubLength, trackStubLength_valid,
+                                 nuVertexAvSeparation, nuVertexAvSeparation_valid,
+                                 nuVertexChargeAsymmetry, nuVertexChargeAsymmetry_valid), axis=1)
 
     # Refinement of the particlePDG vector
     print('We have ', str(nEntries), ' PFParticles overall!')
@@ -434,12 +436,12 @@ def readTree(fileNames, dimensions, nClasses) :
     particlePDG[abs(particlePDG) == 22] = 4
     #particlePDG[(abs(particlePDG) != 0) & (abs(particlePDG) != 1) & (abs(particlePDG) != 2) & (abs(particlePDG) != 3) &  (abs(particlePDG) != 4)] = 5
     
-    y = to_categorical(particlePDG, nClasses)
+    y = to_categorical(particlePDG, 5)
     
     print('startGridU: ', startGridU.shape)
     print('startGridV: ', startGridV.shape)
     
-    return nEntries, [startGridU, startGridU_valid], [startGridV, startGridV_valid], [startGridW, startGridW_valid], [endGridU, endGridU_valid], [endGridV, endGridV_valid], [endGridW, endGridW_valid], pfpVars, trackVars, showerVars, y
+    return nEntries, startGridU, startGridU_valid, startGridV, startGridV_valid, startGridW, startGridW_valid, endGridU, endGridU_valid, endGridV, endGridV_valid, endGridW, endGridW_valid, pfpVars, trackVars, showerVars, y
 
 #################################################################################################################
 #################################################################################################################

@@ -14,7 +14,7 @@ from tensorflow.keras.callbacks import ReduceLROnPlateau
 from tensorflow.keras.callbacks import ModelCheckpoint
 from sklearn.utils import class_weight
 
-import IvysaurusModel_VGG_BN_VARS
+import IvysaurusModel_VGG_BN_VARS_VALID
 
 ###########################################################
 
@@ -36,7 +36,7 @@ learningRate = 1e-4
 ###########################################################
 
 def WhoseThatPokemon(ndimensions, nclasses, nTrackVars, nShowerVars) :
-    return IvysaurusModel_VGG_BN_VARS.IvysaurusIChooseYou(ndimensions, nclasses, nTrackVars, nShowerVars)
+    return IvysaurusModel_VGG_BN_VARS_VALID.IvysaurusIChooseYou(ndimensions, nclasses, nTrackVars, nShowerVars)
 
 ###########################################################
 ###########################################################
@@ -57,15 +57,30 @@ def main(args) :
     startGridU_calo_train = np.empty((0, dimensions, dimensions, 1))
     startGridV_calo_train = np.empty((0, dimensions, dimensions, 1))
     startGridW_calo_train = np.empty((0, dimensions, dimensions, 1))
+    startGridU_calo_valid_train = np.empty((0, dimensions, dimensions, 1))
+    startGridV_calo_valid_train = np.empty((0, dimensions, dimensions, 1))
+    startGridW_calo_valid_train = np.empty((0, dimensions, dimensions, 1))
     endGridU_calo_train = np.empty((0, dimensions, dimensions, 1))
     endGridV_calo_train = np.empty((0, dimensions, dimensions, 1))
     endGridW_calo_train = np.empty((0, dimensions, dimensions, 1))
+    endGridU_calo_valid_train = np.empty((0, dimensions, dimensions, 1))
+    endGridV_calo_valid_train = np.empty((0, dimensions, dimensions, 1))
+    endGridW_calo_valid_train = np.empty((0, dimensions, dimensions, 1))
+
+    
     startGridU_calo_test = np.empty((0, dimensions, dimensions, 1))
     startGridV_calo_test = np.empty((0, dimensions, dimensions, 1))
     startGridW_calo_test = np.empty((0, dimensions, dimensions, 1))
+    startGridU_calo_valid_test = np.empty((0, dimensions, dimensions, 1))
+    startGridV_calo_valid_test = np.empty((0, dimensions, dimensions, 1))
+    startGridW_calo_valid_test = np.empty((0, dimensions, dimensions, 1))
     endGridU_calo_test = np.empty((0, dimensions, dimensions, 1))
     endGridV_calo_test = np.empty((0, dimensions, dimensions, 1))
     endGridW_calo_test = np.empty((0, dimensions, dimensions, 1))
+    endGridU_calo_valid_test = np.empty((0, dimensions, dimensions, 1))
+    endGridV_calo_valid_test = np.empty((0, dimensions, dimensions, 1))
+    endGridW_calo_valid_test = np.empty((0, dimensions, dimensions, 1))
+    
     trackVars_train = np.empty((0, nTrackVars))
     showerVars_train = np.empty((0, nShowerVars))
     trackVars_test = np.empty((0, nTrackVars))
@@ -85,15 +100,31 @@ def main(args) :
         startGridU_calo_train = np.concatenate((startGridU_calo_train, data['startGridU_train']), axis=0)
         startGridV_calo_train = np.concatenate((startGridV_calo_train, data['startGridV_train']), axis=0)
         startGridW_calo_train = np.concatenate((startGridW_calo_train, data['startGridW_train']), axis=0)
+        startGridU_calo_valid_train = np.concatenate((startGridU_calo_valid_train, data['startGridU_valid_train']), axis=0)
+        startGridV_calo_valid_train = np.concatenate((startGridV_calo_valid_train, data['startGridV_valid_train']), axis=0)
+        startGridW_calo_valid_train = np.concatenate((startGridW_calo_valid_train, data['startGridW_valid_train']), axis=0)
+        
         endGridU_calo_train = np.concatenate((endGridU_calo_train, data['endGridU_train']), axis=0)
         endGridV_calo_train = np.concatenate((endGridV_calo_train, data['endGridV_train']), axis=0)
         endGridW_calo_train = np.concatenate((endGridW_calo_train, data['endGridW_train']), axis=0)
+        endGridU_calo_valid_train = np.concatenate((endGridU_calo_valid_train, data['endGridU_valid_train']), axis=0)
+        endGridV_calo_valid_train = np.concatenate((endGridV_calo_valid_train, data['endGridV_valid_train']), axis=0)
+        endGridW_calo_valid_train = np.concatenate((endGridW_calo_valid_train, data['endGridW_valid_train']), axis=0)
+        
         startGridU_calo_test = np.concatenate((startGridU_calo_test, data['startGridU_test']), axis=0)
         startGridV_calo_test = np.concatenate((startGridV_calo_test, data['startGridV_test']), axis=0) 
         startGridW_calo_test = np.concatenate((startGridW_calo_test, data['startGridW_test']), axis=0)
+        startGridU_calo_valid_test = np.concatenate((startGridU_calo_valid_test, data['startGridU_valid_test']), axis=0)
+        startGridV_calo_valid_test = np.concatenate((startGridV_calo_valid_test, data['startGridV_valid_test']), axis=0) 
+        startGridW_calo_valid_test = np.concatenate((startGridW_calo_valid_test, data['startGridW_valid_test']), axis=0)
+        
         endGridU_calo_test = np.concatenate((endGridU_calo_test, data['endGridU_test']), axis=0)
         endGridV_calo_test = np.concatenate((endGridV_calo_test, data['endGridV_test']), axis=0)
         endGridW_calo_test = np.concatenate((endGridW_calo_test, data['endGridW_test']), axis=0)
+        endGridU_calo_valid_test = np.concatenate((endGridU_calo_valid_test, data['endGridU_valid_test']), axis=0)
+        endGridV_calo_valid_test = np.concatenate((endGridV_calo_valid_test, data['endGridV_valid_test']), axis=0)
+        endGridW_calo_valid_test = np.concatenate((endGridW_calo_valid_test, data['endGridW_valid_test']), axis=0)
+
         trackVars_train = np.concatenate((trackVars_train, data['trackVars_train']), axis=0)
         trackVars_test = np.concatenate((trackVars_test, data['trackVars_test']), axis=0)
         showerVars_train = np.concatenate((showerVars_train, data['showerVars_train']), axis=0)
@@ -104,6 +135,11 @@ def main(args) :
     print('startGridU_calo_train: ', startGridU_calo_train.shape)
     print('startGridV_calo_train: ', startGridV_calo_train.shape)
     print('startGridW_calo_train: ', startGridW_calo_train.shape)
+
+    print('startGridU_calo_valid_train: ', startGridU_calo_valid_train.shape)
+    print('startGridV_calo_valid_train: ', startGridV_calo_valid_train.shape)
+    print('startGridW_calo_valid_train: ', startGridW_calo_valid_train.shape)
+    
     print('endGridU_calo_train: ', endGridU_calo_train.shape)    
     print('endGridV_calo_train: ', endGridV_calo_train.shape)
     print('endGridW_calo_train: ', endGridW_calo_train.shape)
@@ -152,12 +188,14 @@ def main(args) :
 
     callbacks_list = [checkpoint, reduce_lr]
     
-    history = ivysaurusCalo.fit([startGridU_calo_train, endGridU_calo_train, startGridV_calo_train,
-                                 endGridV_calo_train, startGridW_calo_train, endGridW_calo_train,
+    history = ivysaurusCalo.fit([startGridU_calo_train, startGridU_calo_valid_train, endGridU_calo_train, endGridU_calo_valid_train,
+                                 startGridV_calo_train, startGridV_calo_valid_train, endGridV_calo_train, endGridV_calo_valid_train,
+                                 startGridW_calo_train, startGridW_calo_valid_train, endGridW_calo_train, endGridW_calo_valid_train,
                                  trackVars_train, showerVars_train], y_train,
                                 batch_size = batchSize,
-                                validation_data=([startGridU_calo_test, endGridU_calo_test, startGridV_calo_test,
-                                                  endGridV_calo_test, startGridW_calo_test, endGridW_calo_test,
+                                validation_data=([startGridU_calo_test, startGridU_calo_valid_test, endGridU_calo_test, endGridU_calo_valid_test,
+                                                  startGridV_calo_test, startGridV_calo_valid_test, endGridV_calo_test, endGridV_calo_valid_test,
+                                                  startGridW_calo_test, startGridW_calo_valid_test, endGridW_calo_test, endGridW_calo_valid_test,
                                                   trackVars_test, showerVars_test], y_test),
                                 
     shuffle=True, epochs=args.n_epochs, class_weight=classWeights, callbacks=callbacks_list, verbose=2)

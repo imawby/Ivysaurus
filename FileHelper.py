@@ -192,7 +192,7 @@ def readTree(fileNames, dimensions) :
 
     nHits2D_mean = 818.53
     nHits2D_std = 1406.8101
-    nHits2D[nHits2D] = (nHits2D[nHits2D] - nHits2D_mean) / nHits2D_std
+    nHits2D = (nHits2D - nHits2D_mean) / nHits2D_std
     
     ###################################
     # Track vars (invalid = -1)

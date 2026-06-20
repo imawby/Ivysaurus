@@ -84,8 +84,13 @@ class SharedEncoder(nn.Module):
         x = self.block2(x)
         x = self.pool2(x)
         x = self.block3(x)
-        # GlobalAveragePooling2D
-        x = x.mean(dim=(2, 3))  # (N, 128)
+
+        # --- NEW: Continuous + Localized Feature Extraction ---
+        gap = x.mean(dim=(2, 3))              # Global Average Pooling: (N, 128)
+        gmp = x.max(dim=(2, 3))[0]            # Global Max Pooling: (N, 128)
+        
+        # Concatenate along the channel dimension -> (N, 256)
+        x = torch.cat([gap, gmp], dim=1)
         return x
 
 
@@ -107,20 +112,9 @@ class IvysaurusModel(nn.Module):
         self.scalerV = ViewScaler()
         self.scalerW = ViewScaler()
 
-
-        # Number of continuous physics variables (excluding the masks)
-        # trackVars has 9 pairs of (val, mask) + 1 standalone (nHits2D) = 19 total
-        # We can dynamically handle the even channels:
-        self.num_cont_track = (nTrackVars // 2) + (nTrackVars % 2) 
-        self.track_bn = nn.BatchNorm1d(self.num_cont_track) if nTrackVars > 0 else nn.Identity()
-        
-        # Do the same for showerVars depending on its internal structure
-        self.num_cont_shower = (nShowerVars // 2) + (nShowerVars % 2)
-        self.shower_bn = nn.BatchNorm1d(self.num_cont_shower) if nShowerVars > 0 else nn.Identity()
-
         # Each branch: concat(start_feat, end_feat) -> 128 + 128 = 256
         # Three branches (U/V/W) -> 256 * 3 = 768
-        branch_feat = 128 * 2
+        branch_feat = 256 * 2
         combined_feat = branch_feat * 3 + nTrackVars + nShowerVars
 
         self.head = nn.Sequential(
@@ -165,17 +159,6 @@ class IvysaurusModel(nn.Module):
         branchU = self._branch(self.scalerU, startU, startU_mask, endU, endU_mask)
         branchV = self._branch(self.scalerV, startV, startV_mask, endV, endV_mask)
         branchW = self._branch(self.scalerW, startW, startW_mask, endW, endW_mask)
-
-        # Normalize ONLY the continuous variables (even indices)
-        if trackVars.shape[1] > 0:
-            # Clone to avoid in-place modification errors during backprop
-            trackVars = trackVars.clone() 
-            # Separate out the even indices, normalize them, and put them back
-            trackVars[:, ::2] = self.track_bn(trackVars[:, ::2])
-            
-        if showerVars.shape[1] > 0:
-            showerVars = showerVars.clone()
-            showerVars[:, ::2] = self.shower_bn(showerVars[:, ::2])
 
         combined = torch.cat([branchU, branchV, branchW,
                               trackVars, showerVars], dim=1)

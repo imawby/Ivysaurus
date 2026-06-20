@@ -142,7 +142,7 @@ def main(args):
 
     # ReduceLROnPlateau on val_loss, factor 0.1, patience 2, min_lr 1e-6
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-        optimiser, mode='min', factor=0.1, patience=2, min_lr=1e-6, verbose=True)
+        optimiser, mode='min', factor=0.1, patience=2, min_lr=1e-6)
 
     filePath = (f'/home/imawby/Ivysaurus/models/'
                 f'my_model_{"contained" if args.is_contained else "exiting"}'

@@ -127,18 +127,24 @@ class IvysaurusModel(nn.Module):
         self.out = nn.Linear(256, nclasses)
 
     def _branch(self, scaler, start, start_mask, end, end_mask):
-        # start/end shapes: (N, 1, H, W); masks same.
-        start = torch.cat([start, start_mask], dim=1)  # (N, 2, H, W)
-        end   = torch.cat([end, end_mask], dim=1)
+        # start/end shapes: (N, 1, H, W)
+    
+        # 1. Apply learnable calibration ONLY to the raw charge data
+        start_scaled = scaler(start)
+        end_scaled = scaler(end)
+    
+        # 2. Concatenate the binary masks AFTER scaling
+        start_combined = torch.cat([start_scaled, start_mask], dim=1)  # (N, 2, H, W)
+        end_combined   = torch.cat([end_scaled, end_mask], dim=1)      # (N, 2, H, W)
+    
+        # 3. Pass to the shared encoder
+        start_feat = self.encoder(start_combined)  # (N, 128)
+        end_feat   = self.encoder(end_combined)    # (N, 128)
+    
+    return torch.cat([start_feat, end_feat], dim=1)  # (N, 256)
 
-        start = scaler(start)
-        end   = scaler(end)
 
-        start_feat = self.encoder(start)  # (N, 128)
-        end_feat   = self.encoder(end)    # (N, 128)
-
-        return torch.cat([start_feat, end_feat], dim=1)  # (N, 256)
-
+    
     def forward(self,
                 startU, startU_mask, endU, endU_mask,
                 startV, startV_mask, endV, endV_mask,

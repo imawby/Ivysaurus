@@ -48,6 +48,26 @@ class ResidualBlock(nn.Module):
         out = F.relu(out)
         return out
 
+class SpatialAttention(nn.Module):
+    def __init__(self, kernel_size=3):
+        super().__init__()
+        # We concatenate mean and max across channels, resulting in 2 input channels
+        padding = kernel_size // 2
+        self.conv = nn.Conv2d(2, 1, kernel_size, padding=padding, bias=False)
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, x):
+        # x shape: (B, C, H, W)
+        # Compute average and max pooling along the channel dimension (dim=1)
+        avg_out = torch.mean(x, dim=1, keepdim=True)
+        max_out = torch.amax(x, dim=1, keepdim=True)
+        
+        # Combine them to give the conv layer a profile of spatial intensity
+        combined = torch.cat([avg_out, max_out], dim=1)
+        
+        # Map to a 1-channel attention map and squash between 0 and 1
+        attention_map = self.sigmoid(self.conv(combined))
+        return attention_map
 
 class SharedEncoder(nn.Module):
     """Input: (N, 2, 24, 24) -> output: (N, 128)."""
@@ -77,6 +97,8 @@ class SharedEncoder(nn.Module):
             ResidualBlock(128, 128),
         )
 
+        self.spatial_attention = SpatialAttention()
+        
     def forward(self, x):
         x = self.stem(x)
         x = self.block1(x)
@@ -85,12 +107,18 @@ class SharedEncoder(nn.Module):
         x = self.pool2(x)
         x = self.block3(x)
 
-        # --- NEW: Continuous + Localized Feature Extraction ---
-        gap = x.mean(dim=(2, 3))              # Global Average Pooling: (N, 128)
-        gmp = x.max(dim=(2, 3))[0]            # Global Max Pooling: (N, 128)
+        attention_weights = self.spatial_attention(x)
+
+        # Multiply features element-wise by the attention weights (broadcasting across channels)
+        x = x * attention_weights
+        
+        # Now pool the *attended* features
+        gap = x.mean(dim=(2, 3))               # (N, 128)
+        gmp = torch.amax(x, dim=(2, 3))        # (N, 128)
         
         # Concatenate along the channel dimension -> (N, 256)
         x = torch.cat([gap, gmp], dim=1)
+
         return x
 
 

@@ -53,21 +53,28 @@ class SpatialAttention(nn.Module):
         super().__init__()
         # We concatenate mean and max across channels, resulting in 2 input channels
         padding = kernel_size // 2
-        self.conv = nn.Conv2d(2, 1, kernel_size, padding=padding, bias=False)
+        self.conv = nn.Conv2d(3, 1, kernel_size, padding=padding, bias=False)
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
         # x shape: (B, C, H, W)
-        # Compute average and max pooling along the channel dimension (dim=1)
-        avg_out = torch.mean(x, dim=1, keepdim=True)
-        max_out = torch.amax(x, dim=1, keepdim=True)
+        avg = torch.mean(x, dim=1, keepdim=True)
+        max = torch.amax(x, dim=1, keepdim=True)
+
+        attn = torch.cat([avg, max, F.avg_pool2d(x, 3, stride=1, padding=1).mean(dim=1, keepdim=True)], dim=1)
+        attention = self.sigmoid(self.conv(attn))
+
         
-        # Combine them to give the conv layer a profile of spatial intensity
-        combined = torch.cat([avg_out, max_out], dim=1)
+        # # Compute average and max pooling along the channel dimension (dim=1)
+        # avg_out = torch.mean(x, dim=1, keepdim=True)
+        # max_out = torch.amax(x, dim=1, keepdim=True)
         
-        # Map to a 1-channel attention map and squash between 0 and 1
-        attention_map = self.sigmoid(self.conv(combined))
-        return attention_map
+        # # Combine them to give the conv layer a profile of spatial intensity
+        # combined = torch.cat([avg_out, max_out], dim=1)
+        
+        # # Map to a 1-channel attention map and squash between 0 and 1
+        # attention_map = self.sigmoid(self.conv(combined))
+        return attention
 
 class SharedEncoder(nn.Module):
     """Input: (N, 2, 24, 24) -> output: (N, 128)."""
@@ -90,7 +97,7 @@ class SharedEncoder(nn.Module):
             ResidualBlock(32, 64),
             ResidualBlock(64, 64),
         )
-        self.pool2 = nn.MaxPool2d(2)  # 12 -> 6
+        self.pool2 = nn.Conv2d(64, 64, 3, stride=2, padding=1) #nn.MaxPool2d(2)  # 12 -> 6
 
         self.block3 = nn.Sequential(
             ResidualBlock(64, 128),
@@ -102,7 +109,7 @@ class SharedEncoder(nn.Module):
     def forward(self, x):
         x = self.stem(x)
         x = self.block1(x)
-        x = self.pool1(x)
+        #x = self.pool1(x)
         x = self.block2(x)
         x = self.pool2(x)
         x = self.block3(x)
@@ -113,12 +120,16 @@ class SharedEncoder(nn.Module):
         x = x * attention_weights
         
         # Now pool the *attended* features
-        gap = x.mean(dim=(2, 3))               # (N, 128)
-        gmp = torch.amax(x, dim=(2, 3))        # (N, 128)
+        #gap = x.mean(dim=(2, 3))               # (N, 128)
+        #gmp = torch.amax(x, dim=(2, 3))        # (N, 128)
         
         # Concatenate along the channel dimension -> (N, 256)
-        x = torch.cat([gap, gmp], dim=1)
+        #x = torch.cat([gap, gmp], dim=1)
+        #x = gmp
 
+        x = F.adaptive_avg_pool2d(x, (2, 2))
+        x = x.flatten(1)
+        
         return x
 
 
@@ -142,8 +153,9 @@ class IvysaurusModel(nn.Module):
 
         # Each branch: concat(start_feat, end_feat) -> 128 + 128 = 256
         # Three branches (U/V/W) -> 256 * 3 = 768
-        branch_feat = 256 * 2
-        combined_feat = branch_feat * 3 + nTrackVars + nShowerVars
+        encoder_out = 512
+        branch_out = encoder_out * 2
+        combined_feat = branch_out * 3 + nTrackVars + nShowerVars
 
         self.head = nn.Sequential(
             nn.Linear(combined_feat, 512, bias=False),

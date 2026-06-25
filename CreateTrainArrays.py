@@ -19,10 +19,10 @@ dimensions = 24
 
 # Here we'll get our information...
 #fileNames = glob.glob('/storage/hpc/30/mawbyi1/Ivysaurus/files/grid24/*/' + sys.argv[1] + '.root')
-fileNames = ['/Users/isobel/Desktop/DUNE/2024/Ivysaurus/files/newGrid/filtered_0.root']
+fileNames = ['/home/imawby/Ivysaurus/files/filtered_2.root']
 #fileNames = ['/Users/isobel/Desktop/DUNE/2024/Ivysaurus/files/revive/nu_dune10kt_1x2x6_1062_274_20230823T120808Z_gen_g4_detsim_hitreco__20240229T174219Z_reco2_IvysaurusTrainingFiles.root']
 #fileNames = ['/Users/isobel/Desktop/DUNE/2024/Ivysaurus/files/revive/filtered_nu_0.root']
-trainVarFile = '/Users/isobel/Desktop/DUNE/2024/Ivysaurus/files/revive/filtered_0'
+trainVarFile = '/home/imawby/Ivysaurus/files/filtered_2'
 #trainVarFile = '/Users/isobel/Desktop/DUNE/2024/Ivysaurus/files/revive/test'
 print(fileNames)
 

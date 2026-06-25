@@ -6,6 +6,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
+from sklearn.metrics import balanced_accuracy_score
 
 from ivysaurus_model import IvysaurusModel
 
@@ -25,16 +26,16 @@ learningRate = 1e-4
 ###########################################################
 
 
-def to_nchw(arr):
-    """(N, H, W, 1) -> (N, 1, H, W) float32 tensor."""
-    arr = np.asarray(arr, dtype=np.float32)
-    return torch.from_numpy(np.transpose(arr, (0, 3, 1, 2)))
+# def to_nchw(arr):
+#     """(N, H, W, 1) -> (N, 1, H, W) float32 tensor."""
+#     arr = np.asarray(arr, dtype=np.float32)
+#     return torch.from_numpy(np.transpose(arr, (0, 3, 1, 2)))
 
 
 class IvysaurusDataset(Dataset):
     def __init__(self, grids, trackVars, showerVars, y):
         # grids: dict of name -> (N, H, W, 1) numpy arrays
-        self.grids = {k: to_nchw(v) for k, v in grids.items()}
+        self.grids = {k: torch.from_numpy(np.asarray(v, dtype=np.float32)) for k, v in grids.items()}   #
         self.trackVars = torch.from_numpy(trackVars.astype(np.float32))
         self.showerVars = torch.from_numpy(showerVars.astype(np.float32))
         # CrossEntropyLoss wants class indices, not one-hot
@@ -75,7 +76,7 @@ def main(args):
     # --- Load data ---
     suffix = "Contained" if args.is_contained else "Exiting"
     trainFileNames = glob.glob(
-        f'/home/imawby/Ivysaurus/files/filtered_0_{suffix}.npz')
+        f'/home/imawby/Ivysaurus/files/filtered_*_{suffix}.npz')
     print(trainFileNames)
 
     # mapping: model input name -> (.npz key prefix)
@@ -89,36 +90,46 @@ def main(args):
         "endW":   "endGridW",   "endW_mask":   "endGridW_valid",
     }
 
-    def empty_grids():
-        return {k: np.empty((0, dimensions, dimensions, 1)) for k in GRID_KEYS}
 
-    grids_train, grids_test = empty_grids(), empty_grids()
-    trackVars_train = np.empty((0, nTrackVars))
-    showerVars_train = np.empty((0, nShowerVars))
-    trackVars_test = np.empty((0, nTrackVars))
-    showerVars_test = np.empty((0, nShowerVars))
-    y_train = np.empty((0, nClasses))
-    y_test = np.empty((0, nClasses))
+    grids_train = {k: [] for k in GRID_KEYS}
+    grids_test  = {k: [] for k in GRID_KEYS}
+    
+    trackVars_train = []
+    showerVars_train = []
+    trackVars_test = []
+    showerVars_test = []
+    y_train = []
+    y_test = []
 
     for fname in trainFileNames:
         print("Reading file:", fname, ", This may take a while...")
         data = np.load(fname)
 
         for k, prefix in grid_map.items():
-            grids_train[k] = np.concatenate(
-                (grids_train[k], data[f"{prefix}_train"]), axis=0)
-            grids_test[k] = np.concatenate(
-                (grids_test[k], data[f"{prefix}_test"]), axis=0)
+            grids_train[k].append(data[f"{prefix}_train"])
+            grids_test[k].append(data[f"{prefix}_test"])
 
-        trackVars_train = np.concatenate((trackVars_train, data['trackVars_train']), axis=0)
-        trackVars_test = np.concatenate((trackVars_test, data['trackVars_test']), axis=0)
-        showerVars_train = np.concatenate((showerVars_train, data['showerVars_train']), axis=0)
-        showerVars_test = np.concatenate((showerVars_test, data['showerVars_test']), axis=0)
-        y_train = np.concatenate((y_train, data['y_train']), axis=0)
-        y_test = np.concatenate((y_test, data['y_test']), axis=0)
+        trackVars_train.append(data['trackVars_train'])
+        trackVars_test.append(data['trackVars_test'])
+        showerVars_train.append(data['showerVars_train'])
+        showerVars_test.append(data['showerVars_test'])
+        y_train.append(data['y_train'])
+        y_test.append(data['y_test'])
+
+    # Convert to numpy
+    for k in GRID_KEYS:
+        grids_train[k] = np.concatenate(grids_train[k], axis=0)
+        grids_test[k]  = np.concatenate(grids_test[k], axis=0)
+
+    trackVars_train = np.concatenate(trackVars_train, axis=0)
+    trackVars_test = np.concatenate(trackVars_test, axis=0)
+    showerVars_train = np.concatenate(showerVars_train, axis=0)
+    showerVars_test = np.concatenate(showerVars_test, axis=0)
+    y_train = np.concatenate(y_train, axis=0)
+    y_test = np.concatenate(y_test, axis=0)
 
     print("y_train:", y_train.shape, "y_test:", y_test.shape)
-
+    
     train_ds = IvysaurusDataset(grids_train, trackVars_train, showerVars_train, y_train)
     test_ds = IvysaurusDataset(grids_test, trackVars_test, showerVars_test, y_test)
 
@@ -172,6 +183,8 @@ def main(args):
         train_acc = train_correct / train_total
 
         # ---- validate ----
+        all_preds = []
+        all_labels = []
         model.eval()
         val_loss, val_correct, val_total = 0.0, 0, 0
         with torch.no_grad():
@@ -180,23 +193,35 @@ def main(args):
                 logits = run_model(model, batch, device)
                 loss = criterion(logits, labels)
 
+                preds = logits.argmax(1)
+                all_preds.append(preds.cpu().numpy())
+                all_labels.append(labels.cpu().numpy())
+
                 val_loss += loss.item() * labels.size(0)
-                val_correct += (logits.argmax(1) == labels).sum().item()
+                val_correct += (preds == labels).sum().item()
                 val_total += labels.size(0)
+
+        all_preds = np.concatenate(all_preds)
+        all_labels = np.concatenate(all_labels)
+        val_bal_acc = balanced_accuracy_score(all_labels, all_preds)
 
         val_loss /= val_total
         val_acc = val_correct / val_total
 
         print(f"Epoch {epoch+1}/{args.n_epochs} - "
               f"loss: {train_loss:.4f} - acc: {train_acc:.4f} - "
-              f"val_loss: {val_loss:.4f} - val_acc: {val_acc:.4f}")
+              f"val_loss: {val_loss:.4f} - val_acc: {val_acc:.4f} - val_bal_acc: {val_bal_acc:.4f}")
 
         scheduler.step(val_loss)
 
         # checkpoint: save best on val_acc
-        if val_acc > best_val_acc:
-            best_val_acc = val_acc
-            torch.save(model.state_dict(), filePath)
+        if val_bal_acc > best_val_acc:
+            best_val_acc = val_bal_acc
+            model_cpu = model.cpu()
+            model_cpu.eval() # just to make sure
+            scripted = torch.jit.script(model_cpu)
+            scripted.save(filePath)
+            model.to(device)
             print(f"  val_acc improved to {val_acc:.4f}, saved model to {filePath}")
 
 

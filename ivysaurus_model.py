@@ -53,7 +53,7 @@ class SpatialAttention(nn.Module):
         super().__init__()
         # We concatenate mean and max across channels, resulting in 2 input channels
         padding = kernel_size // 2
-        self.conv = nn.Conv2d(3, 1, kernel_size, padding=padding, bias=False)
+        self.conv = nn.Conv2d(2, 1, kernel_size, padding=padding, bias=False)
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
@@ -61,20 +61,20 @@ class SpatialAttention(nn.Module):
         avg = torch.mean(x, dim=1, keepdim=True)
         max = torch.amax(x, dim=1, keepdim=True)
 
-        attn = torch.cat([avg, max, F.avg_pool2d(x, 3, stride=1, padding=1).mean(dim=1, keepdim=True)], dim=1)
-        attention = self.sigmoid(self.conv(attn))
+        #attn = torch.cat([avg, max, F.avg_pool2d(x, 3, stride=1, padding=1).mean(dim=1, keepdim=True)], dim=1)
+        #attention = self.sigmoid(self.conv(attn))
 
         
         # # Compute average and max pooling along the channel dimension (dim=1)
-        # avg_out = torch.mean(x, dim=1, keepdim=True)
-        # max_out = torch.amax(x, dim=1, keepdim=True)
+        avg_out = torch.mean(x, dim=1, keepdim=True)
+        max_out = torch.amax(x, dim=1, keepdim=True)
         
         # # Combine them to give the conv layer a profile of spatial intensity
-        # combined = torch.cat([avg_out, max_out], dim=1)
+        combined = torch.cat([avg_out, max_out], dim=1)
         
         # # Map to a 1-channel attention map and squash between 0 and 1
-        # attention_map = self.sigmoid(self.conv(combined))
-        return attention
+        attention_map = self.sigmoid(self.conv(combined))
+        return attention_map
 
 class SharedEncoder(nn.Module):
     """Input: (N, 2, 24, 24) -> output: (N, 128)."""
@@ -171,12 +171,12 @@ class IvysaurusModel(nn.Module):
 
         self.out = nn.Linear(256, nclasses)
 
-    def _branch(self, scaler, start, start_mask, end, end_mask):
-        # start/end shapes: (N, 1, H, W)
-    
+
+        
+    def _branch(self, start_scaled, start_mask, end_scaled, end_mask):
+        # start/end shapes: (N, 1, H, W)        
         # 1. Apply learnable calibration ONLY to the raw charge data
-        start_scaled = scaler(start)
-        end_scaled = scaler(end)
+
     
         # 2. Concatenate the binary masks AFTER scaling
         start_combined = torch.cat([start_scaled, start_mask], dim=1)  # (N, 2, H, W)
@@ -187,8 +187,6 @@ class IvysaurusModel(nn.Module):
         end_feat   = self.encoder(end_combined)    # (N, 128)
     
         return torch.cat([start_feat, end_feat], dim=1)  # (N, 256)
-
-
     
     def forward(self,
                 startU, startU_mask, endU, endU_mask,
@@ -196,9 +194,31 @@ class IvysaurusModel(nn.Module):
                 startW, startW_mask, endW, endW_mask,
                 trackVars, showerVars):
 
-        branchU = self._branch(self.scalerU, startU, startU_mask, endU, endU_mask)
-        branchV = self._branch(self.scalerV, startV, startV_mask, endV, endV_mask)
-        branchW = self._branch(self.scalerW, startW, startW_mask, endW, endW_mask)
+        startU = startU.permute(0, 3, 1, 2)
+        startV = startV.permute(0, 3, 1, 2)
+        startW = startW.permute(0, 3, 1, 2)
+        endU = endU.permute(0, 3, 1, 2)
+        endV = endV.permute(0, 3, 1, 2)
+        endW = endW.permute(0, 3, 1, 2)        
+        startU_mask = startU_mask.permute(0, 3, 1, 2)
+        startV_mask = startV_mask.permute(0, 3, 1, 2)
+        startW_mask = startW_mask.permute(0, 3, 1, 2)
+        endU_mask = endU_mask.permute(0, 3, 1, 2)
+        endV_mask = endV_mask.permute(0, 3, 1, 2)
+        endW_mask = endW_mask.permute(0, 3, 1, 2)        
+
+        startU = self.scalerU(startU)
+        endU = self.scalerU(endU)
+
+        startV = self.scalerV(startV)
+        endV = self.scalerV(endV)
+
+        startW = self.scalerW(startW)
+        endW = self.scalerW(endW)        
+
+        branchU = self._branch(startU, startU_mask, endU, endU_mask)
+        branchV = self._branch(startV, startV_mask, endV, endV_mask)
+        branchW = self._branch(startW, startW_mask, endW, endW_mask)
 
         combined = torch.cat([branchU, branchV, branchW,
                               trackVars, showerVars], dim=1)

@@ -55,7 +55,7 @@ def readTree(fileNames, dimensions) :
         print('Reading tree: ', str(fileName),', This may take a while...')
     
         treeFile = uproot.open(fileName)
-        tree = treeFile['ivysaur']
+        tree = treeFile['ivyTrain/ivysaur']
         branches = tree.arrays()
         
         nEntries += len(branches)
@@ -164,16 +164,27 @@ def readTree(fileNames, dimensions) :
     # normalise them
     startGridU_mean = 0.0021
     startGridU_std = 0.0027
-    startGridV_mean = 0.002
-    startGridV_std = 0.0025
-    startGridW_mean = 0.0023
-    startGridW_std = 0.0026
-    endGridU_mean = 0.002
-    endGridU_std = 0.0024
-    endGridV_mean = 0.0019
-    endGridV_std = 0.0023
-    endGridW_mean = 0.0022
-    endGridW_std = 0.0024
+    startGridV_mean = 0.0021
+    startGridV_std = 0.0027
+    startGridW_mean = 0.0021
+    startGridW_std = 0.0027
+    endGridU_mean = 0.0021
+    endGridU_std = 0.0027
+    endGridV_mean = 0.0021
+    endGridV_std = 0.0027
+    endGridW_mean = 0.0021
+    endGridW_std = 0.0027        
+    
+    # startGridV_mean = 0.002
+    # startGridV_std = 0.0025
+    # startGridW_mean = 0.0023
+    # startGridW_std = 0.0026
+    # endGridU_mean = 0.002
+    # endGridU_std = 0.0024
+    # endGridV_mean = 0.0019
+    # endGridV_std = 0.0023
+    # endGridW_mean = 0.0022
+    # endGridW_std = 0.0024
 
     startGridU[startGridU_valid] = (startGridU[startGridU_valid] - startGridU_mean) / startGridU_std
     startGridV[startGridV_valid] = (startGridV[startGridV_valid] - startGridV_mean) / startGridV_std
